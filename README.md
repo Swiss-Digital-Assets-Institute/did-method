@@ -11,6 +11,7 @@ The current version of the Hedera Hashgraph DID Method Specification can be foun
 Older versions can be viewed from tagged versions of this repo; 
 * [v0.1](https://github.com/Meeco/hedera-did-method/releases/tag/v0.1) 
 * [v0.9](https://github.com/Meeco/hedera-did-method/releases/tag/v0.9)
+* [v1.0](https://github.com/Meeco/hedera-did-method/releases/tag/v1.0)
 
 Note the specification markdown file uses [pandoc `title block` syntax](https://pandoc.org/MANUAL.html#extension-pandoc_title_block) for the title and meta data so the table of content did not include these headers.
 
