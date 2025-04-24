@@ -1,6 +1,6 @@
-% Hedera Hashgraph DID Method Specification
-% Authors: Paul Madsen, Jo Vercammen, Derek Munneke
-% Version: 1.0
+% Hashgraph DID Method Specification
+% Authors: Jakub Sydor, Pablo Buitrago
+% Version: 2.0
 <!-- [pandoc `title block`](https://pandoc.org/MANUAL.html#extension-pandoc_title_block) -->
 
 **Table of Contents** 
