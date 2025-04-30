@@ -46,7 +46,16 @@ This document is published as a Draft for feedback.
 
 ## 1.3. Motivation
 
-This document defines a binding of the Decentralized Identifier architecture to Hedera Hashgraph - specifically how to use the Hedera Consensus Service (HCS) for CRUD mechanisms to construct and resolve a DID document from a DID. 
+Version 1.0 of the Hedera DID Method established a functional DID method on Hedera using HCS but tied DID control rigidly to the key embedded in the identifier (referred to as `#did-root-key` logic). This deviated from the standard W3C controller model, creating significant limitations:
+
+. *Deviation from W3C Standard:* Hindered interoperability with standard DID tools, libraries, and platforms expecting the `controller` property to define authority.
+. *Rigid Control:* Made rotation of the primary controlling key difficult or impossible without changing the DID identifier itself, complicating security best practices and delegation scenarios. *Example: Under v1.0, a compromised `<base58-key>` requires changing the DID identifier entirely to revoke control, disrupting existing integrations. v2.0 allows key rotation via the `controller` property without altering the DID.*
+. *Limited Multi-Controller Support:* The v1.0 model's focus on a single identifier-linked key made native support for multiple controllers, common in organizational or delegated scenarios, cumbersome.
+
+Hedera DID Method v2.0 aims to rectify these issues by fully adopting the standard W3C controller pattern for authorization. This change occurs *while retaining the established v1.0 identifier format* to ensure naming continuity for existing DID concepts on Hedera. The result is a more flexible, robust, secure, and interoperable DID method aligned with global standards.
+
+*Note:* This specification defines a new ruleset (v2.0). *Existing v1.0 DIDs remain under v1.0 rules; new DIDs must be created under v2.0 for W3C-aligned control.* There is no in-place upgrade path from v1.0 to v2.0 for an existing DID identifier.
+
 
 # 2. Hedera Hashgraph DID Method
 
