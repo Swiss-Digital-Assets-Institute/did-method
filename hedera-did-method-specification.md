@@ -330,9 +330,11 @@ The resolution process may leak PII as the resolver can infer that the subject p
 
 If DID Controllers want to mitigate the risk of correlation, they should use unique DIDs for every interaction and the corresponding DID Documents should contain unique public keys.
 
-# 6. Reference Implementations
+# 6. Reference Implementations and Testing
 
-The code at [hashgraph/did-sdk-js](https://github.com/hashgraph/did-sdk-js) is intended to provide a JavaScript SDK for this DID method specification. A set of unit tests and example script commands within this repository present a reference implementation of this DID method.
+A reference implementation for the Hedera DID Method v2.0, demonstrating how to create, resolve, update, and deactivate DIDs according to this specification using JavaScript, is being developed. The work-in-progress SDK is available at: [Swiss-Digital-Assets-Institute/hashgraph-did-sdk-js](https://github.com/Swiss-Digital-Assets-Institute/hashgraph-did-sdk-js).
+
+To ensure interoperability and compliance with this specification, implementers (of SDKs, resolvers, or applications) SHOULD validate their implementations against standardized test vectors covering various scenarios, including valid/invalid messages, proof handling, controller management, deactivation, and conflict resolution. *(A dedicated repository or section within the specification project should host these test vectors).*
 
 # 7. References
 
