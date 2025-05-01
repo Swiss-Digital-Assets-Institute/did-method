@@ -147,40 +147,77 @@ Realms allow Solidity smart contracts to run in parallel. Realms are not current
 
 # 3. CRUD Operations
 
-Create, Update and Delete operations against a DID Document are submitted via a Consensus Service (HCS) message.
+Create, Update, and Deactivate operations against a DID Document under the v2.0 ruleset are performed by submitting authorized messages to the DID's associated Hedera Consensus Service (HCS) topic. Authorization is achieved via cryptographic proofs linked to the DID's designated controller(s), as detailed below.
 
-![alt text](./images/crud.flow.drawio.svg "Create, Update and Delete flow")
+![alt text](./images/crud.flow.drawio.svg "Create, Update and Deactivate flow") 
+The Read operation (resolution) of a DID document from a DID still occurs by querying a Hedera mirror node for the HCS topic history and reconstructing the state based on the ordered messages.
 
-The Read operation for resolution of a DID document from a DID happens against a mirror node.
+![alt text](./images/read.flow.drawio.svg "Read flow") 
+A valid v2.0 HCS message payload for Create, Update, or Deactivate operations MUST be a JSON object containing at least the following top-level fields:
 
-![alt text](./images/read.flow.drawio.svg "Read flow")
+- `version`: MUST be the string `"2.0"` to identify the ruleset version being used.
+- `operation`: A string indicating the operation type. Common values include `"create"`, `"update"`, `"deactivate"`. (Note: `"update"` covers modifications to the DID document, potentially including adding or removing properties like verification methods or services, replacing the specific "revoke property" concept from v1.0).
+- `proof`: A mandatory `proof` object whose structure and processing model are based on the **W3C Verifiable Credential Data Integrity v1.0** specification [VC-DI-1.0].
+    - It MUST conform to a specific Data Integrity cryptosuite specification supported by this DID method (e.g., `Ed25519Signature2020`, `JsonWebSignature2020`).
+    - This proof authorizes the operation and MUST be verifiable against a verification method associated with the DID's current designated `controller`(s).
+    - The `proof` SHOULD typically include a `proofPurpose` like `"capabilityInvocation"` to signify control assertion over the DID.
+- **Operation Payload Fields:** Additional fields specific to the `operation`. For instance:
+    - `"create"` operations typically require a `didDocument` field containing the initial DID Document.
+    - `"update"` operations also typically require a `didDocument` field containing the *complete* proposed new state of the DID Document after the update.
+    - `"deactivate"` operations might not require additional payload fields beyond the core `version`, `operation`, and `proof`.
 
-A valid Create, Update, Revoke or Delete message must have a JSON structure defined by a [DIDMessage-schema](DIDMessage.schema.json) and contains the following properties:
+_(The previous v1.0 message structure based on nested `message` and `signature` fields tied to the identifier's key is superseded by this v2.0 structure)._
 
-- `message` - The message content with the following attributes:
-  - `operation` - DID method operation to be performed on the DID document. Valid values are: `create` , `update` , `revoke` and `delete`.
-  - `did` - a hedera DID namestring.
-  - `event` - A Base64-encoded list of events in JSON notation that conforms the different properties of a DID documents to the [DID Specification](https://w3c.github.io/did-core/), the accepted events are listed within this specification.
-  - `timestamp` - A message creation time. The value MUST be a valid XML datetime value, as defined in section 3.3.7 of [W3C XML Schema Definition Language (XSD) 1.1 Part 2: Datatypes](https://www.w3.org/TR/xmlschema11-2/). This datetime value MUST be normalized to UTC 00:00, as indicated by the trailing "Z". It is important to note that this timestamp is a system timestamp as a variable part of the message and does not represent a consensus timestamp of a message submitted to the DID topic.
-- `signature` - A Base64-encoded signature that is a result of signing a minified JSON string of a message attribute with a private key corresponding to the public key `#did-root-key` in the DID document.
-
-Neither the Hedera network nor mirror nodes validate the DID Documents against the above requirements - it is business application network members that, as part of their subscription logic, must validate DID Documents based on the above criteria. The messages with duplicate signatures shall be disregarded and only the first one with verified signature is valid (in consensus timestamp order).
-
-Here is an example of a complete message wrapped in an envelope and signed:
+Here is an illustrative example of a v2.0 `create` operation message payload:
+_[Note: This example is illustrative. Specific values like DIDs and proof values would vary.]_
 
 ```json
 {
-  "message": {
-    "operation": "update",
-    "did": "did:hedera:mainnet:7Prd74ry1Uct87nZqL3ny7aR7Cg46JamVbJgk8azVgUm_0.0.12345", 
-    "event": "ewogICJAY29udGV...9tL3ZjLyIKICAgIH0KICBdCn0=",
-    "timestamp": "2020-04-23T14:37:43.511Z"
+  "version": "2.0",
+  "operation": "create",
+  "didDocument": {
+    "@context": "[https://www.w3.org/ns/did/v1](https://www.w3.org/ns/did/v1)",
+    "id": "did:hedera:testnet:z6MkpP1q8JB5N7eMMPvF6RQN41dF7L9f4V3eY8X4o7X1h4xP_0.0.123456",
+    "controller": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654",
+    "verificationMethod": [
+      {
+        "id": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654#key-1",
+        "type": "Ed25519VerificationKey2018",
+        "controller": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654",
+        "publicKeyMultibase": "z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ"
+      }
+    ],
+    "authentication": [
+      "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654#key-1"
+    ]
   },
-  "signature":  "QNB13Y7Q9...1tzjn4w=="
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2025-04-30T12:00:00Z",
+    "verificationMethod": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654#key-1",
+    "proofPurpose": "capabilityInvocation",
+    "proofValue": "z5uJVg3hJn5fL8gK1fG5hV6fK8gL3kH7jR9wQ4bD5pT2mN1rS7yZ3xW"
+  }
 }
 ```
 
-It is a responsibility of a DID Controller to decide who can submit messages to their DID topic. Access control of message submission is defined by a `submitKey` property of `ConsensusCreateTopicTransaction` body. If no `submitKey` is defined for a topic, then any party can submit messages against the topic. Detailed information on Hedera Consensus Service APIs can be found in the official [Hedera API documentation](https://docs.hedera.com/hedera-api/consensus/consensusservice).
+**Validation and Authorization:**
+
+Neither Hedera network nodes nor standard mirror nodes validate the semantics of DID documents or the cryptographic proofs within HCS messages against the DID's controller. This validation **MUST** be performed by DID resolvers and client applications according to the v2.0 specification rules. Specifically, resolvers MUST:
+* Process HCS messages in the strict order determined by their consensus timestamp and sequence number. In cases of conflicting messages within the same consensus second, the message with the lower sequence number takes precedence.
+* Verify that the `version` field is `"2.0"`.
+* Verify the cryptographic `proof` accompanying each operation against the verification method specified in the proof, ensuring that this verification method is authorized by the DID's designated `controller`(s) *at that point in time according to the processed message history*.
+* Reject any message with a missing, invalid, or unverifiable `proof`, or a proof generated by an unauthorized key.
+* When processing an update that changes the `controller` property itself, validate the operation's `proof` against the *previous* (currently authorized) controller's keys.
+
+**HCS Topic Access Control vs. DID Control:**
+
+It is the responsibility of the entity managing the DID (the controller or their delegate) to manage access to the associated HCS topic. Access control for *submitting messages* to the HCS topic is defined by the topic's `submitKey` property, managed via `ConsensusUpdateTopicTransaction`.
+* **Crucially, the HCS `submitKey` only grants network-level permission to submit messages (valid or invalid) to the topic. It does *not* grant logical authorization to modify the DID state.**
+* Logical authorization to perform valid DID operations (`create`, `update`, `deactivate`) requires a valid cryptographic `proof` generated by the DID's designated `controller`, as described above.
+If no `submitKey` is defined for a topic, any party can submit messages (though only messages with valid proofs from the controller will result in state changes when processed by a conforming resolver). Detailed information on Hedera Consensus Service APIs can be found in the official [Hedera API documentation](https://docs.hedera.com/hedera-api/consensus/consensusservice).
+
+*(Note on Message Size: Hedera Consensus Service messages have a size limit per transaction. However, the official Hedera SDKs automatically handle segmentation (chunking) of messages larger than the single transaction limit, allowing for the submission of typical DID documents and proofs. Developers should generally use the standard SDK functions for message submission.)*
 
 ## 3.1. Operations
 
