@@ -3,7 +3,7 @@
 % Version: 2.0
 <!-- [pandoc `title block`](https://pandoc.org/MANUAL.html#extension-pandoc_title_block) -->
 
-**Table of Contents** 
+**Table of Contents**
 
 - [1. About](#1-about)
   - [1.1. Status of This Document](#11-status-of-this-document)
@@ -15,19 +15,12 @@
 - [3. CRUD Operations](#3-crud-operations)
   - [3.1. Operations](#31-operations)
     - [3.1.1. Create](#311-create)
-    - [3.1.2. Read](#312-read)
+    - [3.1.2. Read (Resolve)](#312-read-resolve)
     - [3.1.3. Update](#313-update)
-    - [3.1.4. Revoke](#314-revoke)
-    - [3.1.5. Delete](#315-delete)
-  - [3.2. Event Payload](#32-event-payload)
-    - [3.2.1. DID Document](#321-did-document)
-    - [3.2.2. DID Owner](#322-did-owner)
-    - [3.2.3. Verification Method](#323-verification-method)
-    - [3.2.4. Verification Relationship](#324-verification-relationship)
-    - [3.2.5. Services](#325-services)
+    - [3.1.4. Deactivate](#314-deactivate)
 - [4. Security Considerations](#4-security-considerations)
 - [5. Privacy Considerations](#5-privacy-considerations)
-- [6. Reference Implementations](#6-reference-implementations)
+- [6. Reference Implementations and Testing](#6-reference-implementations-and-testing)
 - [7. References](#7-references)
 
 # 1. About
