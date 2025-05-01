@@ -56,7 +56,6 @@ Hedera DID Method v2.0 aims to rectify these issues by fully adopting the standa
 
 *Note:* This specification defines a new ruleset (v2.0). *Existing v1.0 DIDs remain under v1.0 rules; new DIDs must be created under v2.0 for W3C-aligned control.* There is no in-place upgrade path from v1.0 to v2.0 for an existing DID identifier.
 
-
 # 2. Hedera Hashgraph DID Method
 
 The namestring that shall identify this DID method is: `hedera`
@@ -101,33 +100,36 @@ _[Note: The following example illustrates the structure of a DID document. Under
 
 ```json
 {
-  "@context": "https://www.w3.org/ns/did/v1",
-  "id": "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
-  "controller": "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+  "@context": [
+    "[https://www.w3.org/ns/did/v1](https://www.w3.org/ns/did/v1)",
+    "[https://w3id.org/security/multikey/v1](https://w3id.org/security/multikey/v1)"
+   ],
+  "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+  "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
   "verificationMethod": [
     {
-      "id": "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1",
-      "type": "Ed25519VerificationKey2018",
-      "controller": "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
-      "publicKeyBase58": "5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd"
+      "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1",
+      "type": "Multikey",
+      "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+      "publicKeyMultibase": "z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd"
     },
     {
-      "id": "did:hedera:testnet:z87meAWt7t2zrDxo7qw3PVTjexKWReYWS75LH29THy8kb_0.0.29617801#key-2",
-      "type": "Ed25519VerificationKey2018",
-      "controller": "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
-      "publicKeyBase58": "AvU2AEh8ybRqNwHAM3CjbkjYaYHpt9oA1uugW9EVTg6P"
+      "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-2",
+      "type": "Multikey",
+      "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+      "publicKeyMultibase": "z6Mkj1AvU2AEh8ybRqNwHAM3CjbkjYaYHpt9oA1uugW9EVTg6P"
     }
   ],
   "assertionMethod": [
-    "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1"
+    "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1"
   ],
   "authentication": [
-    "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1",
-    "did:hedera:testnet:z87meAWt7t2zrDxo7qw3PVTjexKWReYWS75LH29THy8kb_0.0.29617801#key-2"
+    "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1",
+    "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-2"
   ],
   "service": [
     {
-      "id": "did:hedera:testnet:z6MkubW6fwkWSA97RbKs17MtLgWGHBtShQygUc5SeHueFCaG_0.0.29656231#service-1",
+      "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#service-1",
       "type": "LinkedDomains",
       "serviceEndpoint": "https://test.com/did"
     }
@@ -150,9 +152,11 @@ Realms allow Solidity smart contracts to run in parallel. Realms are not current
 Create, Update, and Deactivate operations against a DID Document under the v2.0 ruleset are performed by submitting authorized messages to the DID's associated Hedera Consensus Service (HCS) topic. Authorization is achieved via cryptographic proofs linked to the DID's designated controller(s), as detailed below.
 
 ![alt text](./images/crud.flow.drawio.svg "Create, Update and Deactivate flow") 
+
 The Read operation (resolution) of a DID document from a DID still occurs by querying a Hedera mirror node for the HCS topic history and reconstructing the state based on the ordered messages.
 
 ![alt text](./images/read.flow.drawio.svg "Read flow") 
+
 A valid v2.0 HCS message payload for Create, Update, or Deactivate operations MUST be a JSON object containing at least the following top-level fields:
 
 - `version`: MUST be the string `"2.0"` to identify the ruleset version being used.
@@ -176,19 +180,31 @@ _[Note: This example is illustrative. Specific values like DIDs and proof values
   "version": "2.0",
   "operation": "create",
   "didDocument": {
-    "@context": "[https://www.w3.org/ns/did/v1](https://www.w3.org/ns/did/v1)",
+    "@context": [
+       "[https://www.w3.org/ns/did/v1](https://www.w3.org/ns/did/v1)",
+       "[https://w3id.org/security/multikey/v1](https://w3id.org/security/multikey/v1)"
+    ],
     "id": "did:hedera:testnet:z6MkpP1q8JB5N7eMMPvF6RQN41dF7L9f4V3eY8X4o7X1h4xP_0.0.123456",
     "controller": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654",
     "verificationMethod": [
       {
         "id": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654#key-1",
-        "type": "Ed25519VerificationKey2018",
+        "type": "Multikey",
         "controller": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654",
         "publicKeyMultibase": "z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ"
+      },
+      {
+        "id": "did:hedera:testnet:z6MkpP1q8JB5N7eMMPvF6RQN41dF7L9f4V3eY8X4o7X1h4xP_0.0.123456#key-2",
+        "type": "Multikey",
+        "controller": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654",
+        "publicKeyMultibase": "z6MkpP1q8JB5N7eMMPvF6RQN41dF7L9f4V3eY8X4o7X1h4xP"
       }
     ],
     "authentication": [
       "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654#key-1"
+    ],
+    "assertionMethod": [
+       "did:hedera:testnet:z6MkpP1q8JB5N7eMMPvF6RQN41dF7L9f4V3eY8X4o7X1h4xP_0.0.123456#key-2"
     ]
   },
   "proof": {
