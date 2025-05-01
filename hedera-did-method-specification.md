@@ -338,8 +338,8 @@ To ensure interoperability and compliance with this specification, implementers 
 
 # 7. References
 
-- [DID Primer](https://github.com/WebOfTrustInfo/rwot5-boston/blob/master/topics-and-advance-readings/did-primer.md)
-- [DID Spec](https://w3c.github.io/did-core/)
-- <https://github.com/hashgraph/did-sdk-js>
-- [Hedera docs](https://docs.hedera.com)
-- [Hedera website](https://www.hedera.com)
+* [Decentralized Identifiers (DIDs) v1.0 - W3C Recommendation](https://www.w3.org/TR/did-core/) [DID-CORE]
+* [Verifiable Credential Data Integrity v1.0 - W3C Recommendation](https://www.w3.org/TR/vc-data-integrity/) [VC-DI-1.0]
+* [Hedera DID Method v1.0 Specification (For historical context)](https://github.com/hashgraph/did-method/blob/v1.0/hedera-did-method-specification.md)
+* [Hedera Documentation](https://docs.hedera.com)
+* [Hedera Website](https://www.hedera.com)
