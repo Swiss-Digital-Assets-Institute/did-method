@@ -326,9 +326,9 @@ A DID Document should not include Personally Identifiable Information (PII).
 
 The identifiers used to identify a subject create a greater risk of correlation when those identifiers are long-lived or used across more than one application domain as those domains could use that shared handle for the subject to share information about that subject without their express consent.
 
-The resolution process may leak PII as the resolver can infer that the Subject presenting the DID is interacting with the verifier resolving the DID.
+The resolution process may leak PII as the resolver can infer that the subject presenting the DID is interacting with the verifier resolving the DID.
 
-If DID Controllers want to mitigate the risk of correlation, they should use unique DIDs for every interaction and the corresponding DID Documents should contain a unique public key.
+If DID Controllers want to mitigate the risk of correlation, they should use unique DIDs for every interaction and the corresponding DID Documents should contain unique public keys.
 
 # 6. Reference Implementations
 
