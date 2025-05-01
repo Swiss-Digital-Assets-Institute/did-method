@@ -239,50 +239,57 @@ If no `submitKey` is defined for a topic, any party can submit messages (though 
 
 ### 3.1.1. Create
 
-A DID is created by sending a `ConsensusSubmitMessage` transaction to a Hedera network node. It is executed by sending a `submitMessage` RPC call to the HCS API with the `ConsensusSubmitMessageTransactionBody` containing:
+A DID is created under the v2.0 ruleset by sending a `ConsensusSubmitMessage` transaction to a Hedera network node containing the initial DID document and an authorization proof from the designated controller. This is executed by sending a `submitMessage` RPC call to the HCS API with the `ConsensusSubmitMessageTransactionBody` containing:
 
-- `topicID` - equal to the `did-topic-id` element of the DID namestring.
-- `message` - a JSON DID message envelope described above
-  - `operation` set to `create`
-  - `event` payload either a `DIDOwner` or `DIDDocument` object
+-   `topicID`: The HCS Topic ID specified in the `did-topic-id` parameter of the DID being created.
+-   `message`: The HCS message payload, which MUST be the valid JSON object described in the introduction to Section 3, specifically structured for a `create` operation:
+    * The `version` field MUST be `"2.0"`.
+    * The `operation` field MUST be `"create"`.
+    * A `didDocument` field MUST be present, containing the complete initial state of the DID Document. This document MUST include at least the `id` (matching the DID being created) and the initial `controller` property designating who controls this DID.
+    * A `proof` field MUST be present. This proof, conforming to W3C Data Integrity specifications, MUST cryptographically verify the integrity of the message contents and provide authorization. The proof MUST be generated using the private key corresponding to the public key specified in the `proof.verificationMethod` field. This verification method MUST be associated with the `controller` designated within the `didDocument` payload of this same message. This confirms the initial controller's authorization for creating the DID.
 
-### 3.1.2. Read
+### 3.1.2 Read (Resolve)
 
-Read, or Resolve, occurs by reading messages from the HCS topic set in the `did-topic-id` element of the DID namestring, and processing messages as below:
+Resolving a `did:hedera` DID under v2.0 rules involves querying the HCS topic history associated with the DID's `did-topic-id` (typically via a mirror node) and reconstructing the DID document's state by processing authorized messages in order. The process MUST follow these steps:
 
-1. If the most recent valid message has `operation` set to `delete`, the DID document returned MUST be empty.
-2. If the most recent valid message has `operation` set to `create`, and event object is `DIDDocument`, the DID document returned is the document resolve from the IPFS CID reference.
-3. Otherwise
-   1. Read valid message until one has `operation` set to `create`, and event object is `DIDOwner`.
-   2. Construct DID document by applying message `update` and `revoke` operations in order.
-   3. Return constructed DID document.
+1.  **Fetch History:** Retrieve all messages from the specified HCS `topicID`.
+2.  **Order Messages:** Sort the retrieved messages strictly according to their consensus timestamp and sequence number (lower sequence number first for messages within the same second).
+3.  **Process Sequentially:** Iterate through the ordered messages, maintaining the current known state of the DID document (initially null) and the current authorized controller(s) (initially null). For each message:
+    a.  **Check Version:** Verify if the message payload is a JSON object with a `version` field equal to `"2.0"`. If not, or if the message is malformed, ignore this message and proceed to the next. *(Note: Resolvers supporting multiple versions would apply version-specific logic here).*
+    b.  **Validate Proof:**
+        i.  If the operation is `create`, the `proof` MUST be validated against a verification method associated with the `controller` specified *within the `didDocument` payload of this create message itself*.
+        ii. If the operation is `update` or `deactivate`, the `proof` MUST be validated against a verification method associated with the *current known controller(s)* established by prior valid messages in the sequence.
+        iii. If the `proof` field is missing, malformed, invalid according to its cryptosuite, or the `proof.verificationMethod` is not associated with the authorized controller(s), the message MUST be considered invalid and ignored.
+    c.  **Apply Operation (if proof is valid):**
+        i.  **`create`:** If the current state is null (i.e., this is the first valid message), parse the `didDocument` from the payload. This becomes the initial valid state of the DID Document. Record the `controller`(s) defined within this document. If a state already exists, this subsequent `create` message is typically ignored or treated as an error depending on resolver policy.
+        ii. **`update`:** Replace the entire current known state of the DID document with the `didDocument` provided in the message payload. Update the record of the current `controller`(s) based on the `controller` property in this new document state.
+        iii. **`deactivate`:** Mark the DID as deactivated. Store any relevant metadata from the message (like the proof details or timestamp) associated with the deactivation event. Once deactivated, subsequent `update` operations MUST be ignored.
+4.  **Return Result:** After processing all messages:
+    a.  If the DID was marked as deactivated by the latest valid operation, the resolver MUST return a representation indicating the deactivated status, potentially including metadata about the deactivation event (conformant with [DID-RESOLUTION]). The resolved DID document is typically null or empty.
+    b.  Otherwise, return the final reconstructed state of the DID document according to the requested representation (e.g., `application/did+ld+json`).
+    c.  If no valid `create` message was found, the DID cannot be resolved (error: `notFound`).
 
-### 3.1.3. Update
+### 3.1.3 Update
 
-A property or a DID document is updated by sending a `ConsensusSubmitMessage` transaction to a Hedera network node. It is executed by sending a `submitMessage` RPC call to HCS with the `ConsensusSubmitMessageTransactionBody` containing:
+An existing DID document is updated under the v2.0 ruleset by submitting a `ConsensusSubmitMessage` transaction containing the complete new state of the document and an authorization proof. This is executed by sending a `submitMessage` RPC call to the HCS API with the `ConsensusSubmitMessageTransactionBody` containing:
 
-- `topicID` - equal to the `did-topic-id` element of the DID namestring.
-- `message` - a JSON DID message envelope described above
-  - `operation` set to `update`
-  - `event` payload either a `Service`, `VerificationMethod` or `VerificationRelationship` object
+-   `topicID`: The HCS Topic ID specified in the `did-topic-id` parameter of the DID being updated.
+-   `message`: The HCS message payload, which MUST be a valid JSON object as described in the introduction to Section 3, specifically structured for an `update` operation:
+    * The `version` field MUST be `"2.0"`.
+    * The `operation` field MUST be `"update"`.
+    * A `didDocument` field MUST be present, containing the **complete desired state** of the DID Document *after* the update. Modifications, additions, or removals of properties (like `verificationMethod`, `service`, or changing the `controller`) are achieved by providing the full document reflecting this new state.
+    * A `proof` field MUST be present. This proof MUST be valid and generated using a verification method associated with the DID's **current `controller`(s)** (i.e., the controller(s) authorized *before* this update is applied).
 
-### 3.1.4. Revoke
+### 3.1.4 Deactivate
 
-A property or a DID document is updated by sending a `ConsensusSubmitMessage` transaction to a Hedera network node. It is executed by sending a `submitMessage` RPC call to HCS with the `ConsensusSubmitMessageTransactionBody` containing:
+A DID document is deactivated under the v2.0 ruleset (marking it as no longer valid or resolvable to a current state) by submitting a `ConsensusSubmitMessage` transaction authorized by the current controller. This is executed by sending a `submitMessage` RPC call to the HCS API with the `ConsensusSubmitMessageTransactionBody` containing:
 
-- `topicID` - equal to the `did-topic-id` element of the DID namestring.
-- `message` - a JSON DID message envelope described above
-  - `operation` set to `revoke`
-  - `event` payload either a `Service`, `VerificationMethod` or `VerificationRelationship` object with `id` set to the property to remove.
-
-### 3.1.5. Delete
-
-A Whole DID document is deleted/nullified by sending `ConsensusSubmitMessage` transaction to a Hedera network node. It is executed by sending a `submitMessage` RPC call to HCS with the `ConsensusSubmitMessageTransactionBody` containing:
-
-- `topicID` - equal to the `did-topic-id` element of the DID namestring.
-- `message` - a JSON DID message envelope described above
-  - `operation` set to `revoke`
-  - `event` payload will be ignored
+-   `topicID`: The HCS Topic ID specified in the `did-topic-id` parameter of the DID being deactivated.
+-   `message`: The HCS message payload, which MUST be a valid JSON object as described in the introduction to Section 3, specifically structured for a `deactivate` operation:
+    * The `version` field MUST be `"2.0"`.
+    * The `operation` field MUST be `"deactivate"`.
+    * A `proof` field MUST be present. This proof MUST be valid and generated using a verification method associated with the DID's **current `controller`(s)**.
+    * Any additional payload fields beyond `version`, `operation`, and `proof` MAY be ignored by resolvers.
 
 ## 3.2. Event Payload
 
