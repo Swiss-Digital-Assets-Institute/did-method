@@ -101,9 +101,9 @@ _[Note: The following example illustrates the structure of a DID document. Under
 ```json
 {
   "@context": [
-    "[https://www.w3.org/ns/did/v1](https://www.w3.org/ns/did/v1)",
-    "[https://w3id.org/security/multikey/v1](https://w3id.org/security/multikey/v1)"
-   ],
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/multikey/v1"
+  ],
   "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
   "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
   "verificationMethod": [
@@ -181,8 +181,8 @@ _[Note: This example is illustrative. Specific values like DIDs and proof values
   "operation": "create",
   "didDocument": {
     "@context": [
-       "[https://www.w3.org/ns/did/v1](https://www.w3.org/ns/did/v1)",
-       "[https://w3id.org/security/multikey/v1](https://w3id.org/security/multikey/v1)"
+      "https://www.w3.org/ns/did/v1",
+      "https://w3id.org/security/multikey/v1"
     ],
     "id": "did:hedera:testnet:z6MkpP1q8JB5N7eMMPvF6RQN41dF7L9f4V3eY8X4o7X1h4xP_0.0.123456",
     "controller": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654",
