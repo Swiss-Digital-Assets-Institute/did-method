@@ -155,7 +155,7 @@ A valid v2.0 HCS message payload for Create, Update, or Deactivate operations MU
 - `version`: MUST be the string `"2.0"` to identify the ruleset version being used.
 - `operation`: A string indicating the operation type. Common values include `"create"`, `"update"`, `"deactivate"`. (Note: `"update"` covers modifications to the DID document, potentially including adding or removing properties like verification methods or services, replacing the specific "revoke property" concept from v1.0).
 - `proof`: A mandatory `proof` object whose structure and processing model are based on the **W3C Verifiable Credential Data Integrity v1.0** specification [VC-DI-1.0].
-    - It MUST conform to a specific Data Integrity cryptosuite specification supported by this DID method (e.g., `Ed25519Signature2020`, `JsonWebSignature2020`).
+    - It MUST conform to a specific Data Integrity cryptosuite specification (e.g., `eddsa-jcs-2022`, `bbs-2023`).
     - This proof authorizes the operation and MUST be verifiable against a verification method associated with the DID's current designated `controller`(s).
     - The `proof` SHOULD typically include a `proofPurpose` like `"capabilityInvocation"` to signify control assertion over the DID.
 - **Operation Payload Fields:** Additional fields specific to the `operation`. For instance:
