@@ -113,7 +113,7 @@ _[Note: The following example illustrates the structure of a DID document. Under
       "publicKeyMultibase": "z6Mkj1AvU2AEh8ybRqNwHAM3CjbkjYaYHpt9oA1uugW9EVTg6P"
     }
   ],
-  "assertionMethod": [
+  "capabilityInvocation": [
     "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1"
   ],
   "authentication": [
