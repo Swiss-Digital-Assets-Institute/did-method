@@ -61,19 +61,19 @@ The `did:hedera` namestring is defined by the following ABNF:
 
 ```abnf
 hedera-did = "did:hedera:" hedera-specific-idstring "_" hedera-specific-parameters
-hedera-specific-idstring = hedera-network ":" hedera-base58-key
+hedera-specific-idstring = hedera-network ":" hedera-base58btc-key
 hedera-specific-parameters = did-topic-id
 did-topic-id = 1*DIGIT "." 1*DIGIT "." 1*DIGIT
 
 hedera-network = "mainnet" / "testnet"
-hedera-base58-key = 32*44(base58)
-base58 = "1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / "A" / "B" /
-         "C" / "D" / "E" / "F" / "G" / "H" / "J" / "K" / "L" / "M" / "N" /
-         "P" / "Q" / "R" / "S" / "T" / "U" / "V" / "W" / "X" / "Y" / "Z" /
-         "a" / "b" / "c" / "d" / "e" / "f" / "g" / "h" / "i" / "j" / "k" /
-         "m" / "n" / "o" / "p" / "q" / "r" / "s" / "t" / "u" / "v" / "w" /
-         "x" / "y" / "z"
-```
+hedera-base58btc-key = 32*44(base58btc) ; Using the Bitcoin Base58 alphabet
+base58btc = "1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / "A" / "B" /
+            "C" / "D" / "E" / "F" / "G" / "H" / "J" / "K" / "L" / "M" / "N" /
+            "P" / "Q" / "R" / "S" / "T" / "U" / "V" / "W" / "X" / "Y" / "Z" /
+            "a" / "b" / "c" / "d" / "e" / "f" / "g" / "h" / "i" / "j" / "k" /
+            "m" / "n" / "o" / "p" / "q" / "r" / "s" / "t" / "u" / "v" / "w" /
+            "x" / "y" / "z"
+````
 
 Example:
 
