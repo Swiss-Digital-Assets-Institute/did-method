@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/hedera-did-document.schema.json",
+  "title": "Hedera DID Method DID Document",
+  "description": "Defines the structure for a DID Document conformant with the Hedera DID Method.",
+  "type": "object",
+  "properties": {
+    "@context": {
+      "description": "The JSON-LD context(s). MUST include DID Core v1, Multikey v1, and JWS 2020 contexts.",
+      "type": "array",
+      "items": { "type": "string", "format": "uri" },
+      "minItems": 3,
+      "contains": [
+         {"const": "https://www.w3.org/ns/did/v1"},
+         {"const": "https://w3id.org/security/multikey/v1"},
+         {"const": "https://w3id.org/security/suites/jws-2020/v1"}
+      ]
+    },
+    "id": {
+      "description": "The Hedera DID.",
+      "type": "string",
+      "format": "uri",
+      "pattern": "^did:hedera:(mainnet|testnet):z[1-9A-HJ-NP-Za-km-z]{40,}_\\d+\\.\\d+\\.\\d+$"
+    },
+    "controller": {
+      "description": "The DID(s) controlling this DID document. MUST be on the same Hedera network as the 'id'.",
+      "$comment": "Same-network check requires application logic beyond JSON Schema.",
+      "oneOf": [
+        {
+          "description": "A single DID controller.",
+          "type": "string",
+          "format": "uri",
+          "pattern": "^did:hedera:(mainnet|testnet):z[1-9A-HJ-NP-Za-km-z]{40,}_\\d+\\.\\d+\\.\\d+$"
+        },
+        {
+          "description": "A set of DID controllers.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^did:hedera:(mainnet|testnet):z[1-9A-HJ-NP-Za-km-z]{40,}_\\d+\\.\\d+\\.\\d+$"
+          },
+          "uniqueItems": true
+        }
+      ]
+    },
+    "verificationMethod": {
+      "description": "Verification methods associated with the DID.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/verificationMethod" }
+    },
+    "authentication": {
+      "description": "Verification methods suitable for authentication.",
+      "$ref": "#/$defs/verificationRelationshipSet"
+    },
+    "assertionMethod": {
+      "description": "Verification methods suitable for asserting claims.",
+      "$ref": "#/$defs/verificationRelationshipSet"
+    },
+    "keyAgreement": {
+      "description": "Verification methods suitable for key agreement.",
+      "$ref": "#/$defs/verificationRelationshipSet"
+    },
+    "capabilityInvocation": {
+      "description": "Verification methods suitable for invoking capabilities (e.g., managing this document).",
+      "$ref": "#/$defs/verificationRelationshipSet"
+    },
+    "capabilityDelegation": {
+      "description": "Verification methods suitable for delegating capabilities.",
+      "$ref": "#/$defs/verificationRelationshipSet"
+    },
+    "service": {
+      "description": "Service endpoints associated with the DID.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/service" }
+    }
+  },
+  "required": [
+    "@context",
+    "id",
+    "controller",
+    "verificationMethod"
+  ],
+  "additionalProperties": true,
+  "$defs": {
+    "verificationMethod": {
+      "description": "A verification method using Multikey or JsonWebKey2020 types.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "DID URL identifying this verification method.",
+          "type": "string",
+          "format": "uri",
+          "pattern": "^did:.+#.+$"
+        },
+        "type": {
+          "description": "The verification method type.",
+          "type": "string",
+          "enum": ["Multikey", "JsonWebKey2020"]
+        },
+        "controller": {
+          "description": "The DID controlling this specific verification method.",
+          "type": "string",
+          "format": "uri",
+          "pattern": "^did:hedera:(mainnet|testnet):z[1-9A-HJ-NP-Za-km-z]{40,}_\\d+\\.\\d+\\.\\d+$"
+        },
+        "publicKeyMultibase": {
+            "description": "Public key encoded in Multibase format (required if type is Multikey).",
+            "type": "string",
+            "pattern": "^z[1-9A-HJ-NP-Za-km-z]+$"
+        },
+        "publicKeyJwk": {
+            "description": "Public key encoded as a JSON Web Key (required if type is JsonWebKey2020).",
+            "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "controller"
+      ],
+       "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "Multikey" } } },
+          "then": { "required": ["publicKeyMultibase"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "JsonWebKey2020" } } },
+          "then": { "required": ["publicKeyJwk"] }
+        }
+      ],
+       "additionalProperties": false
+    },
+    "verificationRelationshipReference": {
+        "description": "Reference to a verification method, either embedded or by ID.",
+         "oneOf": [
+            {
+              "description": "Reference by ID (DID URL string).",
+              "type": "string",
+              "format": "uri",
+              "pattern": "^did:.+#.+$"
+            },
+            {
+              "description": "Embedded verification method map.",
+              "$ref": "#/$defs/verificationMethod"
+            }
+         ]
+    },
+     "verificationRelationshipSet": {
+         "description": "An array of verification method references.",
+         "type": "array",
+         "items": { "$ref": "#/$defs/verificationRelationshipReference" },
+         "uniqueItems": true
+    },
+    "service": {
+      "description": "Represents a service endpoint.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "DID URL identifying this service.",
+          "type": "string",
+          "format": "uri",
+          "pattern": "^did:.+#.+$"
+         },
+        "type": {
+            "description": "The type of the service.",
+             "oneOf": [
+                { "type": "string" },
+                { "type": "array", "items": { "type": "string" } }
+             ]
+        },
+        "serviceEndpoint": {
+            "description": "The service endpoint URL, map, or set.",
+             "oneOf": [
+                { "type": "string", "format": "uri" },
+                { "type": "object" },
+                {
+                  "type": "array",
+                  "items": { "oneOf": [ { "type": "string", "format": "uri" }, { "type": "object" } ] }
+                }
+             ]
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "serviceEndpoint"
+      ],
+      "additionalProperties": true
+    }
+  }
+}
