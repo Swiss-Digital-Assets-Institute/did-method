@@ -25,7 +25,7 @@ Dependencies are:
 sudo apt install pandoc librsvg2-bin texlive-latex-extra
 ```
 
-## SDKs supporting the Hedera Hashgraph DID Method & Verifiable Credentials
+## SDKs supporting the Hedera Hashgraph DID Method
 
 - JavaScript SDK is maintained in a separate repository at [did-sdk-js](https://github.com/hashgraph/did-sdk-js).
 
