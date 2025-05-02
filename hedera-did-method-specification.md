@@ -83,7 +83,7 @@ did:hedera:mainnet:z52k2w6rFF9xxzvmSiuyqwJS8b7oFnDtk8S3bhY4YbnJq_0.0.3474905
 
 The method specific identifier (`hedera-specific-idstring` combined with `hedera-specific-parameters`) consists of:
 * A Hedera network identifier (`mainnet` or `testnet`).
-* A Base58 encoded value (`hedera-base58-key`), typically derived from the public key used during the initial creation of the DID. **Crucially, under the v2.0 rules defined in this specification, this `<base58-key>` component serves *only as part of the unique identifier* after creation and *does not* grant ongoing control authority over the DID.**
+* A Base58 bitcoin encoded value (`hedera-base58btc-key`), typically derived from the public key used during the initial creation of the DID. **Crucially, under the v2.0 rules defined in this specification, this `<base58btc-key>` component serves *only as part of the unique identifier* after creation and *does not* grant ongoing control authority over the DID.**
 * A Hedera Topic ID (`did-topic-id`), separated by an underscore (`_`), identifying the Hedera Consensus Service (HCS) topic used for messages related to this DID.
 
 Control and authorization for managing the DID under v2.0 are determined solely by the `controller` property within the DID document and verified via cryptographic `proof` mechanisms submitted in HCS messages (detailed in Section 3), aligning with the W3C DID Core specification. The v1.0 concept of a mandatory `#did-root-key` intrinsically linked to the identifier for control is superseded in v2.0.
