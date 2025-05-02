@@ -289,7 +289,7 @@ A DID document is deactivated under the v2.0 ruleset (marking it as no longer va
 The security model for Hedera DID Method v2.0 relies on the inherent security of the Hedera network (via HCS) and the robustness of the W3C controller model and cryptographic proofs. Key considerations include:
 
 * **Identifier Component Roles (v2.0 Rule):**
-    * *Crucial Distinction:* The `<base58-key>` component within the DID identifier string (`did:hedera:<network>:<base58-key>_<topic-id>`) serves **only as part of the unique identifier** after the initial creation operation. It **does not grant** ongoing control authority or authorization privileges for managing the DID document under v2.0 rules. Control is solely determined by the `controller` property within the DID document and verified via the `proof` mechanism. Misunderstanding this is a security risk.
+    * *Crucial Distinction:* The `<base58btc-key>` component within the DID identifier string (`did:hedera:<network>:<base58btc-key>_<topic-id>`) serves **only as part of the unique identifier** after the initial creation operation. It **does not grant** ongoing control authority or authorization privileges for managing the DID document under v2.0 rules. Control is solely determined by the `controller` property within the DID document and verified via the `proof` mechanism. Misunderstanding this is a security risk.
 
 * **Controller Authority & Compromise:**
     * *Primary Trust Anchor:* The security of a v2.0 Hedera DID rests primarily on the security of the DID(s) designated in its `controller` property and their associated cryptographic keys. Control authority is explicitly defined by this property.
