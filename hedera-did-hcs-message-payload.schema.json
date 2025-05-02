@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/hedera-did-hcs-message-payload.schema.json",
+  "title": "Hedera DID Method HCS Message Payload",
+  "description": "Defines the structure for the JSON payload submitted to HCS for Hedera DID Method operations.",
+  "type": "object",
+  "properties": {
+    "version": {
+      "description": "Identifier for the message format structure version (e.g., '2.0').",
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "operation": {
+      "description": "The DID operation being performed.",
+      "type": "string",
+      "enum": [
+        "create",
+        "update",
+        "deactivate"
+      ]
+    },
+    "didDocument": {
+      "description": "The DID Document content. Required for 'create' and 'update' operations.",
+      "$ref": "#/$defs/didDocument"
+    },
+    "proof": {
+      "description": "A W3C Data Integrity proof authorizing the operation.",
+      "$ref": "#/$defs/dataIntegrityProof"
+    }
+  },
+  "required": [
+    "version",
+    "operation",
+    "proof"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": { "operation": { "const": "create" } },
+        "required": ["operation"]
+      },
+      "then": { "required": ["didDocument"] }
+    },
+    {
+      "if": {
+        "properties": { "operation": { "const": "update" } },
+         "required": ["operation"]
+      },
+      "then": { "required": ["didDocument"] }
+    }
+  ],
+  "$defs": {
+    "didDocument": {
+      "description": "Placeholder for the DID Document structure. Should reference a dedicated schema.",
+      "type": "object"
+    },
+    "dataIntegrityProof": {
+      "description": "Represents a W3C Data Integrity proof structure.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "The type of the proof (e.g., Ed25519Signature2020).",
+          "type": "string"
+        },
+        "created": {
+          "description": "The proof creation timestamp.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "verificationMethod": {
+          "description": "The DID URL identifying the verification method.",
+          "type": "string",
+          "format": "uri"
+        },
+        "proofPurpose": {
+          "description": "The purpose of the proof (e.g., capabilityInvocation).",
+          "type": "string"
+        },
+        "proofValue": {
+          "description": "The proof value, typically encoded in Multibase.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "created",
+        "verificationMethod",
+        "proofPurpose",
+        "proofValue"
+      ],
+      "additionalProperties": true
+    }
+  }
+}
