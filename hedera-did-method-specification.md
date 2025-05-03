@@ -95,7 +95,8 @@ _[Note: The following example illustrates the structure of a DID document. Under
 {
   "@context": [
     "https://www.w3.org/ns/did/v1",
-    "https://w3id.org/security/multikey/v1"
+    "https://w3id.org/security/multikey/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
   ],
   "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
   "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
@@ -108,17 +109,20 @@ _[Note: The following example illustrates the structure of a DID document. Under
     },
     {
       "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-2",
-      "type": "Multikey",
+      "type": "JsonWebKey2020",
       "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
-      "publicKeyMultibase": "z6Mkj1AvU2AEh8ybRqNwHAM3CjbkjYaYHpt9oA1uugW9EVTg6P"
+      "publicKeyJwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "iaRFURYLA-QTlCYjFo_8UfMScPZgYTCpJzVEiJmQ_50"
+      }
     }
   ],
   "capabilityInvocation": [
     "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1"
   ],
   "authentication": [
-    "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1",
-    "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-2"
+    "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1"
   ],
   "service": [
     {
@@ -156,8 +160,8 @@ A valid v2.0 HCS message payload for Create, Update, or Deactivate operations MU
 - `operation`: A string indicating the operation type. Common values include `"create"`, `"update"`, `"deactivate"`. (Note: `"update"` covers modifications to the DID document, potentially including adding or removing properties like verification methods or services, replacing the specific "revoke property" concept from v1.0).
 - `proof`: A mandatory `proof` object whose structure and processing model are based on the **W3C Verifiable Credential Data Integrity v1.0** specification [VC-DI-1.0].
     - It MUST conform to a specific Data Integrity cryptosuite specification (e.g., `eddsa-jcs-2022`, `bbs-2023`).
-    - This proof authorizes the operation and MUST be verifiable against a verification method associated with the DID's current designated `controller`(s).
-    - The `proof` SHOULD typically include a `proofPurpose` like `"capabilityInvocation"` to signify control assertion over the DID.
+    - This `proof` authorizes the operation and MUST be verifiable against a verification method associated with the DID's current designated `controller`(s).
+    - The `proof` SHOULD typically include a `proofPurpose` such as `"capabilityInvocation"` to specify that the proof's verification method is being used by the controller to invoke the cryptographic capability of managing the DID document (e.g., creating, updating, or deactivating it).
 - **Operation Payload Fields:** Additional fields specific to the `operation`. For instance:
     - `"create"` operations typically require a `didDocument` field containing the initial DID Document.
     - `"update"` operations also typically require a `didDocument` field containing the *complete* proposed new state of the DID Document after the update.
@@ -175,29 +179,41 @@ _[Note: This example is illustrative. Specific values like DIDs and proof values
   "didDocument": {
     "@context": [
       "https://www.w3.org/ns/did/v1",
-      "https://w3id.org/security/multikey/v1"
+      "https://w3id.org/security/multikey/v1",
+      "https://w3id.org/security/suites/jws-2020/v1"
     ],
-    "id": "did:hedera:testnet:z6MkpP1q8JB5N7eMMPvF6RQN41dF7L9f4V3eY8X4o7X1h4xP_0.0.123456",
-    "controller": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654",
+    "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+    "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
     "verificationMethod": [
       {
-        "id": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654#key-1",
+        "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1",
         "type": "Multikey",
-        "controller": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654",
-        "publicKeyMultibase": "z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ"
+        "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+        "publicKeyMultibase": "z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd"
       },
       {
-        "id": "did:hedera:testnet:z6MkpP1q8JB5N7eMMPvF6RQN41dF7L9f4V3eY8X4o7X1h4xP_0.0.123456#key-2",
-        "type": "Multikey",
-        "controller": "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654",
-        "publicKeyMultibase": "z6MkpP1q8JB5N7eMMPvF6RQN41dF7L9f4V3eY8X4o7X1h4xP"
+        "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-2",
+        "type": "JsonWebKey2020",
+        "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+        "publicKeyJwk": {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "iaRFURYLA-QTlCYjFo_8UfMScPZgYTCpJzVEiJmQ_50"
+        }
       }
     ],
-    "authentication": [
-      "did:hedera:testnet:z6MkhdNf4kYt1q5k1Z1hY9fJp5n1Z1t4q8gR3jH9kX6mP7dQ_0.0.987654#key-1"
+    "capabilityInvocation": [
+      "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1"
     ],
-    "assertionMethod": [
-       "did:hedera:testnet:z6MkpP1q8JB5N7eMMPvF6RQN41dF7L9f4V3eY8X4o7X1h4xP_0.0.123456#key-2"
+    "authentication": [
+      "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1"
+    ],
+    "service": [
+      {
+        "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#service-1",
+        "type": "LinkedDomains",
+        "serviceEndpoint": "https://test.com/did"
+      }
     ]
   },
   "proof": {
@@ -239,7 +255,7 @@ A DID is created under the v2.0 ruleset by sending a `ConsensusSubmitMessage` tr
     * The `version` field MUST be `"2.0"`.
     * The `operation` field MUST be `"create"`.
     * A `didDocument` field MUST be present, containing the complete initial state of the DID Document. This document MUST include at least the `id` (matching the DID being created) and the initial `controller` property designating who controls this DID.
-    * A `proof` field MUST be present. This proof, conforming to W3C Data Integrity specifications, MUST cryptographically verify the integrity of the message contents and provide authorization. The proof MUST be generated using the private key corresponding to the public key specified in the `proof.verificationMethod` field. This verification method MUST be associated with the `controller` designated within the `didDocument` payload of this same message. This confirms the initial controller's authorization for creating the DID.
+    * A `proof` field MUST be present. This proof, conforming to W3C Data Integrity specifications, MUST cryptographically verify the integrity of the message contents and provide authorization. The proof MUST be generated using the private key corresponding to the public key specified in the `proof.verificationMethod` field. This verification method MUST be associated with the `controller` designated within the `didDocument` payload of this same message. This proof demonstrates the controller invoking their capability (as indicated by the `proofPurpose`, typically `"capabilityInvocation"`) to authorize the creation of the DID.
 
 ### 3.1.2 Read (Resolve)
 
@@ -252,7 +268,7 @@ Resolving a `did:hedera` DID under v2.0 rules involves querying the HCS topic hi
     b.  **Validate Proof:**
         i.  If the operation is `create`, the `proof` MUST be validated against a verification method associated with the `controller` specified *within the `didDocument` payload of this create message itself*.
         ii. If the operation is `update` or `deactivate`, the `proof` MUST be validated against a verification method associated with the *current known controller(s)* established by prior valid messages in the sequence.
-        iii. If the `proof` field is missing, malformed, invalid according to its cryptosuite, or the `proof.verificationMethod` is not associated with the authorized controller(s), the message MUST be considered invalid and ignored.
+        iii. If the `proof` field is missing, malformed, invalid according to its cryptosuite, or if it fails to demonstrate that an authorized controller is invoking the necessary capability (e.g., the `proof.verificationMethod` is not associated with the authorized controller(s) for capability invocation), the message MUST be considered invalid and ignored.
     c.  **Apply Operation (if proof is valid):**
         i.  **`create`:** If the current state is null (i.e., this is the first valid message), parse the `didDocument` from the payload. This becomes the initial valid state of the DID Document. Record the `controller`(s) defined within this document. If a state already exists, this subsequent `create` message is typically ignored or treated as an error depending on resolver policy.
         ii. **`update`:** Replace the entire current known state of the DID document with the `didDocument` provided in the message payload. Update the record of the current `controller`(s) based on the `controller` property in this new document state.
@@ -271,7 +287,7 @@ An existing DID document is updated under the v2.0 ruleset by submitting a `Cons
     * The `version` field MUST be `"2.0"`.
     * The `operation` field MUST be `"update"`.
     * A `didDocument` field MUST be present, containing the **complete desired state** of the DID Document *after* the update. Modifications, additions, or removals of properties (like `verificationMethod`, `service`, or changing the `controller`) are achieved by providing the full document reflecting this new state.
-    * A `proof` field MUST be present. This proof MUST be valid and generated using a verification method associated with the DID's **current `controller`(s)** (i.e., the controller(s) authorized *before* this update is applied).
+    * A `proof` field MUST be present. This proof MUST be valid and demonstrate the **current `controller`(s)** (i.e., the controller(s) authorized *before* this update is applied) invoking their capability to authorize the update, typically indicated by a `proofPurpose` of `"capabilityInvocation"` and generated using an associated verification method.
 
 ### 3.1.4 Deactivate
 
@@ -281,7 +297,7 @@ A DID document is deactivated under the v2.0 ruleset (marking it as no longer va
 -   `message`: The HCS message payload, which MUST be a valid JSON object as described in the introduction to Section 3, specifically structured for a `deactivate` operation:
     * The `version` field MUST be `"2.0"`.
     * The `operation` field MUST be `"deactivate"`.
-    * A `proof` field MUST be present. This proof MUST be valid and generated using a verification method associated with the DID's **current `controller`(s)**.
+    * A `proof` field MUST be present. This proof MUST be valid and demonstrate the **current `controller`(s)** invoking their capability to authorize the deactivation, typically indicated by a `proofPurpose` of `"capabilityInvocation"` and generated using an associated verification method.
     * Any additional payload fields beyond `version`, `operation`, and `proof` MAY be ignored by resolvers.
 
 # 4. Security Considerations
@@ -309,7 +325,7 @@ The security model for Hedera DID Method v2.0 relies on the inherent security of
     * Neither Hedera network nodes nor standard mirror nodes validate DID document semantics or controller proofs. This validation **must** be performed by DID resolvers and client applications according to the v2.0 specification rules (verifying proofs against the controller's keys). Failure to validate proofs correctly breaks the security model.
     * *Resolver Validation Requirements (Anti-Patterns to Avoid):* Resolvers MUST:
         * Strictly follow the HCS consensus timestamp ordering for messages.
-        * Reject any v2.0 message that lacks a `proof` field or contains an invalid or unverifiable `proof`.
+        * Reject any v2.0 message that lacks a `proof` field or contains a `proof` that is invalid, unverifiable, or does not demonstrate authorized capability invocation by the controller.
         * When processing an update that changes the `controller` property, validate the operation's `proof` against the *previous* (currently authorized) controller's keys.
         * Reject messages with incorrect `version` fields or malformed structures.
 
