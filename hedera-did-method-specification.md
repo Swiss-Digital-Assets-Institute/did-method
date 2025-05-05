@@ -1,9 +1,9 @@
-% Hedera Hashgraph DID Method Specification
-% Authors: Paul Madsen, Jo Vercammen, Derek Munneke
-% Version: 1.0
+% Hashgraph DID Method Specification
+% Authors: Jakub Sydor, Pablo Buitrago
+% Version: 2.0
 <!-- [pandoc `title block`](https://pandoc.org/MANUAL.html#extension-pandoc_title_block) -->
 
-**Table of Contents** 
+**Table of Contents**
 
 - [1. About](#1-about)
   - [1.1. Status of This Document](#11-status-of-this-document)
@@ -15,64 +15,65 @@
 - [3. CRUD Operations](#3-crud-operations)
   - [3.1. Operations](#31-operations)
     - [3.1.1. Create](#311-create)
-    - [3.1.2. Read](#312-read)
+    - [3.1.2. Read (Resolve)](#312-read-resolve)
     - [3.1.3. Update](#313-update)
-    - [3.1.4. Revoke](#314-revoke)
-    - [3.1.5. Delete](#315-delete)
-  - [3.2. Event Payload](#32-event-payload)
-    - [3.2.1. DID Document](#321-did-document)
-    - [3.2.2. DID Owner](#322-did-owner)
-    - [3.2.3. Verification Method](#323-verification-method)
-    - [3.2.4. Verification Relationship](#324-verification-relationship)
-    - [3.2.5. Services](#325-services)
+    - [3.1.4. Deactivate](#314-deactivate)
 - [4. Security Considerations](#4-security-considerations)
 - [5. Privacy Considerations](#5-privacy-considerations)
-- [6. Reference Implementations](#6-reference-implementations)
+- [6. Reference Implementations and Testing](#6-reference-implementations-and-testing)
 - [7. References](#7-references)
 
 # 1. About
 
-The Hedera DID method specification conforms to the requirements of the [Decentralized Identifiers (DIDs) v1.0](https://www.w3.org/TR/2022/REC-did-core-20220719/) [W3C Recommendation](https://www.w3.org/standards/types#REC), published 19 July 2022. 
+The Hedera DID method specification conforms to the requirements specified in the [Decentralized Identifiers (DIDs) v1.0](https://www.w3.org/TR/2022/REC-did-core-20220719/) W3C Recommendation, published 19 July 2022.
 
-The following DID Method is registered in the [DID Method Registry](https://w3c-ccg.github.io/did-method-registry/).
+The `hedera` DID Method is registered in the [W3C DID Method Registry](https://w3c-ccg.github.io/did-method-registry/).
 
 ## 1.1. Status of This Document
 
-This document is published as a Draft for feedback.
+This document is published as a Draft for feedback. Comments and contributions are welcome.
 
 ## 1.2. About Hedera Hashgraph
 
-[Hedera](https://hedera.com/) [Hashgraph](https://github.com/hashgraph) is a multi-purpose open public ledger that uses hashgraph consensus - a fast, fair, and secure alternative to blockchains.
+[Hedera](https://hedera.com/) [Hashgraph](https://github.com/hashgraph) is a public, open-source, proof-of-stake network that utilizes the hashgraph consensus algorithm. It offers high throughput, low fees, and finality in seconds for various services, including the Hedera Consensus Service (HCS) leveraged by this DID method.
 
 ## 1.3. Motivation
 
-This document defines a binding of the Decentralized Identifier architecture to Hedera Hashgraph - specifically how to use the Hedera Consensus Service (HCS) for CRUD mechanisms to construct and resolve a DID document from a DID. 
+Version 1.0 of the Hedera DID Method established a functional DID method on Hedera using HCS but tied DID control rigidly to the key embedded in the identifier (referred to as `#did-root-key` logic). This deviated from the standard W3C controller model, creating significant limitations:
+
+* *Deviation from W3C Standard:* Hindered interoperability with standard DID tools, libraries, and platforms expecting the `controller` property to define authority.
+* *Rigid Control:* Made rotation of the primary controlling key difficult or impossible without changing the DID identifier itself, complicating security best practices (like key rotation) and delegation scenarios. *Example: Under v1.0, a compromised `<base58-key>` requires changing the DID identifier entirely to revoke control, disrupting existing integrations. v2.0 allows key rotation via the `controller` property without altering the DID identifier.*
+* *Limited Multi-Controller Support:* The v1.0 model's focus on a single identifier-linked key made native support for multiple controllers, common in organizational or delegated scenarios, cumbersome.
+
+Hedera DID Method v2.0 aims to rectify these issues by fully adopting the standard W3C controller pattern for authorization. This change occurs *while retaining the established v1.0 identifier format* to ensure naming continuity for existing DID concepts on Hedera. The result is a more flexible, robust, secure, and interoperable DID method aligned with global standards.
+
+_[Note: This specification defines a new ruleset (v2.0). Existing v1.0 DIDs remain under v1.0 rules; new DIDs **must** be created under v2.0 rules to benefit from the W3C-aligned control mechanism. There is no in-place upgrade path from v1.0 to v2.0 for an existing DID identifier.]_
 
 # 2. Hedera Hashgraph DID Method
 
-The namestring that shall identify this DID method is: `hedera`
+The namestring that **shall** identify this DID method is: `hedera`
 
-A DID that uses this method MUST begin with the following prefix: `did:hedera`. Per the DID specification, this string MUST be in lowercase. The remainder of the DID, after the prefix, is the NSI specified below.
+A DID that uses this method **must** begin with the following prefix: `did:hedera:`. Per the DID specification, this string **must** be in lowercase. The remainder of the DID, after the prefix, is the Namespace Specific Identifier (NSI) specified below. This section defines the identifier format, which remains consistent between v1.0 and v2.0 of this method.
 
 ## 2.1. Namespace Specific Identifier (NSI)
 
-The `did:hedera` namestring is defined by the following ABNF:
+The `did:hedera` NSI is defined by the following ABNF grammar:
 
 ```abnf
 hedera-did = "did:hedera:" hedera-specific-idstring "_" hedera-specific-parameters
-hedera-specific-idstring = hedera-network ":" hedera-base58-key
+hedera-specific-idstring = hedera-network ":" hedera-base58btc-key
 hedera-specific-parameters = did-topic-id
 did-topic-id = 1*DIGIT "." 1*DIGIT "." 1*DIGIT
 
 hedera-network = "mainnet" / "testnet"
-hedera-base58-key = 32*44(base58)
-base58 = "1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / "A" / "B" /
-         "C" / "D" / "E" / "F" / "G" / "H" / "J" / "K" / "L" / "M" / "N" /
-         "P" / "Q" / "R" / "S" / "T" / "U" / "V" / "W" / "X" / "Y" / "Z" /
-         "a" / "b" / "c" / "d" / "e" / "f" / "g" / "h" / "i" / "j" / "k" /
-         "m" / "n" / "o" / "p" / "q" / "r" / "s" / "t" / "u" / "v" / "w" /
-         "x" / "y" / "z"
-```
+hedera-base58btc-key = 32*44(base58btc) ; Using the Bitcoin Base58 alphabet
+base58btc = "1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / "A" / "B" /
+            "C" / "D" / "E" / "F" / "G" / "H" / "J" / "K" / "L" / "M" / "N" /
+            "P" / "Q" / "R" / "S" / "T" / "U" / "V" / "W" / "X" / "Y" / "Z" /
+            "a" / "b" / "c" / "d" / "e" / "f" / "g" / "h" / "i" / "j" / "k" /
+            "m" / "n" / "o" / "p" / "q" / "r" / "s" / "t" / "u" / "v" / "w" /
+            "x" / "y" / "z"
+````
 
 Example:
 
@@ -80,40 +81,52 @@ Example:
 did:hedera:mainnet:z52k2w6rFF9xxzvmSiuyqwJS8b7oFnDtk8S3bhY4YbnJq_0.0.3474905
 ```
 
-The method specific identifier `hedera-specific-idstring` is composed of a Hedera network identifier with a `:` separator followed by a `hedera-base58-key` identifier which is a base58 Encoded of a DID root public key and a `did-topic-id` (see details below).
+The method-specific identifier (`hedera-specific-idstring` combined with `hedera-specific-parameters`) consists of:
 
-Every DID document registered on Hedera network MUST contain a public key of id `#did-root-key` and type `Ed25519VerificationKey2018`. The `hedera-base58-key` identifier is a base58 Encoded of this public key.
+  * A Hedera network identifier (`mainnet` or `testnet`).
+  * A Base58 bitcoin encoded value (`hedera-base58btc-key`), typically derived from the public key used during the initial creation of the DID. **Crucially, under the v2.0 rules defined in this specification, this `<base58btc-key>` component serves *only as part of the unique identifier* after creation and does not grant ongoing control authority over the DID.**
+  * A Hedera Topic ID (`did-topic-id`), separated by an underscore (`_`), identifying the Hedera Consensus Service (HCS) topic used for messages related to this DID.
 
-Example Hedera DID document:
+Control and authorization for managing the DID under v2.0 are determined solely by the `controller` property within the DID document and verified via cryptographic `proof` mechanisms submitted in HCS messages (detailed in Section 3), aligning with the W3C DID Core specification. The v1.0 concept of a mandatory `#did-root-key` intrinsically linked to the identifier for control is superseded in v2.0.
+
+*[Note: The following example illustrates the structure of a DID document under v2.0 rules. The `controller` property defines authority. While a verification method like `#key-1` might use a key related to the identifier's `<base58btc-key>` component, this method holds no special control privileges granted by this DID method specification itself. Authorization relies on proofs generated by keys authorized by the `controller`(s) for specific capabilities (like `capabilityInvocation`), as detailed in Section 3.]*
 
 ```json
 {
-  "@context": "https://www.w3.org/ns/did/v1",
-  "id": "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/multikey/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+  "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
   "verificationMethod": [
     {
-      "id": "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#did-root-key",
-      "type": "Ed25519VerificationKey2018",
-      "controller": "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
-      "publicKeyBase58": "5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd"
+      "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1",
+      "type": "Multikey",
+      "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+      "publicKeyMultibase": "z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd"
     },
     {
-      "id": "did:hedera:testnet:z87meAWt7t2zrDxo7qw3PVTjexKWReYWS75LH29THy8kb_0.0.29617801#key-1",
-      "type": "Ed25519VerificationKey2018",
-      "controller": "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
-      "publicKeyBase58": "AvU2AEh8ybRqNwHAM3CjbkjYaYHpt9oA1uugW9EVTg6P"
+      "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-2",
+      "type": "JsonWebKey2020",
+      "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+      "publicKeyJwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "iaRFURYLA-QTlCYjFo_8UfMScPZgYTCpJzVEiJmQ_50"
+      }
     }
   ],
-  "assertionMethod": [
-    "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#did-root-key"
+  "capabilityInvocation": [
+    "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1"
   ],
   "authentication": [
-    "did:hedera:testnet:z5pFuTLEhRXiMiWVb1MxBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#did-root-key",
-    "did:hedera:testnet:z87meAWt7t2zrDxo7qw3PVTjexKWReYWS75LH29THy8kb_0.0.29617801#key-1"
+    "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1"
   ],
   "service": [
     {
-      "id": "did:hedera:testnet:z6MkubW6fwkWSA97RbKs17MtLgWGHBtShQygUc5SeHueFCaG_0.0.29656231#service-1",
+      "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#service-1",
       "type": "LinkedDomains",
       "serviceEndpoint": "https://test.com/did"
     }
@@ -123,266 +136,231 @@ Example Hedera DID document:
 
 ## 2.2. Method-Specific DID URL Parameters
 
-There is one method-specific parameter defined for a Hedera DID:
+There is one method-specific parameter defined as part of the Hedera DID NSI:
 
-- `did-topic-id` - an mandatory parameter that defines a TopicID of Hedera Consensus Service topic to which a particular DID document was submitted. This allow us to resolve DIDs publicly through Hedera mirror nodes.
+  - `did-topic-id` - a mandatory parameter, separated from the `hedera-specific-idstring` by an underscore (`_`), that defines the TopicID of the Hedera Consensus Service (HCS) topic to which messages for a particular DID are submitted. This allows resolvers to locate the relevant HCS message stream via Hedera mirror nodes.
 
-A Hedera TopicID is a triplet of numbers, e.g. `0.0.29656231` represents a topic identifier `29656231` within realm `0` within shard `0`.
+A Hedera TopicID is a triplet of numbers (shard.realm.num), e.g., `0.0.29656231`, represents topic identifier `29656231` within realm `0` and shard `0`. Realms and shards are Hedera network constructs; currently, all topics reside in shard 0 and realm 0.
 
-Realms allow Solidity smart contracts to run in parallel. Realms are not relevant to this DID Method. In the future, when the number of consensus nodes warrants, the Hedera network will be divided up into shards such that a particular transaction will be processed into consensus only by a subset of the full set of nodes.
+# 3\. CRUD Operations
 
-# 3. CRUD Operations
+Create, Update, and Deactivate operations against a DID Document under the v2.0 ruleset are performed by submitting authorized messages to the DID's associated Hedera Consensus Service (HCS) topic. Authorization **must** be achieved via cryptographic proofs linked to the DID's designated controller(s), as detailed below.
 
-Create, Update and Delete operations against a DID Document are submitted via a Consensus Service (HCS) message.
+![alt text](./images/crud.flow.drawio.svg "Create, Update and Deactivate flow")
+The Read operation (resolution) of a DID document **must** occur by querying a Hedera mirror node for the HCS topic history and reconstructing the state based on the ordered, authorized messages.
+![alt text](./images/read.flow.drawio.svg "Read flow") 
+A valid v2.0 HCS message payload for Create, Update, or Deactivate operations **must** be a JSON object containing at least the following top-level fields:
 
-![alt text](./images/crud.flow.drawio.svg "Create, Update and Delete flow")
+  - `version`: **must** be the string `"2.0"` to identify the ruleset version being used.
+  - `operation`: A string indicating the operation type. Values **must** include `"create"`, `"update"`, or `"deactivate"`. (Note: `"update"` covers modifications to the DID document, potentially including adding or removing properties like verification methods or services, effectively replacing the specific "revoke property" concept from v1.0).
+  - `proof`: A mandatory `proof` object whose structure and processing model **must** be based on the **W3C Verifiable Credential Data Integrity v1.0** specification.
+      - It **must** conform to a specific Data Integrity cryptosuite specification (e.g., `eddsa-jcs-2022`, `bbs-2023`).
+      - This `proof` authorizes the operation and **must** be verifiable against a verification method associated with the DID's current designated `controller`(s).
+      - The `proof` **must** include a `proofPurpose` such as `"capabilityInvocation"` to specify that the proof's verification method is being used by the controller to invoke the cryptographic capability of managing the DID document (e.g., creating, updating, or deactivating it).
+  - **Operation Payload Fields:** Additional fields specific to the `operation`. For instance:
+      - `"create"` operations **must** include a `didDocument` field containing the initial DID Document.
+      - `"update"` operations **must** include a `didDocument` field containing the *complete* proposed new state of the DID Document after the update.
+      - `"deactivate"` operations **may** omit additional payload fields beyond the core `version`, `operation`, and `proof`.
 
-The Read operation for resolution of a DID document from a DID happens against a mirror node.
+*(The previous v1.0 message structure based on nested `message` and `signature` fields tied to the identifier's key is superseded by this v2.0 structure).*
 
-![alt text](./images/read.flow.drawio.svg "Read flow")
-
-A valid Create, Update, Revoke or Delete message must have a JSON structure defined by a [DIDMessage-schema](DIDMessage.schema.json) and contains the following properties:
-
-- `message` - The message content with the following attributes:
-  - `operation` - DID method operation to be performed on the DID document. Valid values are: `create` , `update` , `revoke` and `delete`.
-  - `did` - a hedera DID namestring.
-  - `event` - A Base64-encoded list of events in JSON notation that conforms the different properties of a DID documents to the [DID Specification](https://w3c.github.io/did-core/), the accepted events are listed within this specification.
-  - `timestamp` - A message creation time. The value MUST be a valid XML datetime value, as defined in section 3.3.7 of [W3C XML Schema Definition Language (XSD) 1.1 Part 2: Datatypes](https://www.w3.org/TR/xmlschema11-2/). This datetime value MUST be normalized to UTC 00:00, as indicated by the trailing "Z". It is important to note that this timestamp is a system timestamp as a variable part of the message and does not represent a consensus timestamp of a message submitted to the DID topic.
-- `signature` - A Base64-encoded signature that is a result of signing a minified JSON string of a message attribute with a private key corresponding to the public key `#did-root-key` in the DID document.
-
-Neither the Hedera network nor mirror nodes validate the DID Documents against the above requirements - it is business application network members that, as part of their subscription logic, must validate DID Documents based on the above criteria. The messages with duplicate signatures shall be disregarded and only the first one with verified signature is valid (in consensus timestamp order).
-
-Here is an example of a complete message wrapped in an envelope and signed:
+*[Note: The following example is illustrative. Specific values like DIDs, keys, timestamps, and proof values will vary.]*
 
 ```json
 {
-  "message": {
-    "operation": "update",
-    "did": "did:hedera:mainnet:7Prd74ry1Uct87nZqL3ny7aR7Cg46JamVbJgk8azVgUm_0.0.12345", 
-    "event": "ewogICJAY29udGV...9tL3ZjLyIKICAgIH0KICBdCn0=",
-    "timestamp": "2020-04-23T14:37:43.511Z"
+  "version": "2.0",
+  "operation": "create",
+  "didDocument": {
+    "@context": [
+      "https://www.w3.org/ns/did/v1",
+      "https://w3id.org/security/multikey/v1",
+      "https://w3id.org/security/suites/jws-2020/v1"
+    ],
+    "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+    "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+    "verificationMethod": [
+      {
+        "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1",
+        "type": "Multikey",
+        "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+        "publicKeyMultibase": "z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd"
+      },
+      {
+        "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-2",
+        "type": "JsonWebKey2020",
+        "controller": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701",
+        "publicKeyJwk": {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "iaRFURYLA-QTlCYjFo_8UfMScPZgYTCpJzVEiJmQ_50"
+        }
+      }
+    ],
+    "capabilityInvocation": [
+      "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1"
+    ],
+    "authentication": [
+      "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1"
+    ],
+    "service": [
+      {
+        "id": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#service-1",
+        "type": "LinkedDomains",
+        "serviceEndpoint": "https://test.com/did"
+      }
+    ]
   },
-  "signature":  "QNB13Y7Q9...1tzjn4w=="
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2025-04-30T12:00:00Z",
+    "verificationMethod": "did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701#key-1",
+    "proofPurpose": "capabilityInvocation",
+    "proofValue": "z5uJVg3hJn5fL8gK1fG5hV6fK8gL3kH7jR9wQ4bD5pT2mN1rS7yZ3xW"
+  }
 }
 ```
 
-It is a responsibility of a DID Controller to decide who can submit messages to their DID topic. Access control of message submission is defined by a `submitKey` property of `ConsensusCreateTopicTransaction` body. If no `submitKey` is defined for a topic, then any party can submit messages against the topic. Detailed information on Hedera Consensus Service APIs can be found in the official [Hedera API documentation](https://docs.hedera.com/hedera-api/consensus/consensusservice).
+**Validation and Authorization:**
+
+Neither Hedera network nodes nor standard mirror nodes validate the semantics of DID documents or the cryptographic proofs within HCS messages against the DID's controller. This validation **must** be performed by DID resolvers and client applications according to the v2.0 specification rules. Specifically, resolvers **must**:
+
+  * Process HCS messages in the strict order determined by their consensus timestamp and sequence number. In cases of conflicting messages within the same consensus second, the message with the lower sequence number **must** take precedence.
+  * Verify that the `version` field is `"2.0"`. Messages with other versions **must** be processed according to their respective version specifications or ignored if unsupported.
+  * Verify the cryptographic `proof` accompanying each operation against the verification method specified in the proof, ensuring that this verification method is authorized by the DID's designated `controller`(s) *at that point in time according to the processed message history*. The specific validation rules depend on the operation type (see Section 3.1.2).
+  * Reject any message with a missing, invalid, or unverifiable `proof`, or a proof generated by an unauthorized key (i.e., a key not associated with the controller for the specified `proofPurpose` at that time).
+  * When processing an update that changes the `controller` property itself, validate the operation's `proof` against the *previous* (currently authorized) controller's keys.
+
+**HCS Topic Access Control vs. DID Control:**
+
+It is the responsibility of the entity managing the DID (the controller or their delegate) to manage access to the associated HCS topic. Access control for *submitting messages* to the HCS topic is defined by the topic's `submitKey` property, managed via Hedera's `ConsensusUpdateTopicTransaction`.
+
+  * **Crucially, the HCS `submitKey` only grants network-level permission to submit messages (which could be valid or invalid according to DID rules) to the topic. It does not grant logical authorization to modify the DID state.**
+  * Logical authorization to perform valid DID operations (`create`, `update`, `deactivate`) **must** be established via a valid cryptographic `proof` generated by the DID's designated `controller`, as described above.
+  * If no `submitKey` is defined for a topic, any party can submit messages. However, only messages containing valid proofs from the authorized controller will result in state changes when processed by a conforming DID resolver. Detailed information on Hedera Consensus Service APIs can be found in the official [Hedera API documentation](https://docs.hedera.com/hedera-api/consensus/consensusservice).
+
+*[Note on Message Size: Hedera Consensus Service messages have a size limit per transaction. However, the official Hedera SDKs automatically handle segmentation (chunking) of messages larger than the single transaction limit, allowing for the submission of typical DID documents and proofs without manual chunking in most cases. Developers **should** generally use the standard SDK functions for message submission.]*
 
 ## 3.1. Operations
 
 ### 3.1.1. Create
 
-A DID is created by sending a `ConsensusSubmitMessage` transaction to a Hedera network node. It is executed by sending a `submitMessage` RPC call to the HCS API with the `ConsensusSubmitMessageTransactionBody` containing:
+A DID is created under the v2.0 ruleset by sending a `ConsensusSubmitMessage` transaction to a Hedera network node containing the initial DID document and an authorization proof from the designated controller. This is executed by sending a `submitMessage` RPC call (or equivalent SDK function) to the HCS API with the `ConsensusSubmitMessageTransactionBody` containing:
 
-- `topicID` - equal to the `did-topic-id` element of the DID namestring.
-- `message` - a JSON DID message envelope described above
-  - `operation` set to `create`
-  - `event` payload either a `DIDOwner` or `DIDDocument` object
+  - `topicID`: The HCS Topic ID specified in the `did-topic-id` parameter of the DID being created.
+  - `message`: The HCS message payload, which **must** be the valid JSON object described in the introduction to Section 3, specifically structured for a `create` operation:
+      * The `version` field **must** be `"2.0"`.
+      * The `operation` field **must** be `"create"`.
+      * A `didDocument` field **must** be present, containing the complete initial state of the DID Document. This document **must** include at least the `id` (matching the DID being created) and the initial `controller` property designating who controls this DID.
+      * A `proof` field **must** be present. This proof **must** cryptographically verify the integrity of the message contents and provide authorization. The proof **must** be generated using the private key corresponding to the public key specified in the `proof.verificationMethod` field. This verification method **must** be associated with the `controller` designated within the `didDocument` payload of this *same message*. This proof demonstrates the controller invoking their capability (e.g., indicated by `proofPurpose: "capabilityInvocation"`) to authorize the creation of the DID.
 
-### 3.1.2. Read
+### 3.1.2 Read (Resolve)
 
-Read, or Resolve, occurs by reading messages from the HCS topic set in the `did-topic-id` element of the DID namestring, and processing messages as below:
+Resolving a `did:hedera` DID under v2.0 rules involves querying the HCS topic history associated with the DID's `did-topic-id` (typically via a mirror node) and reconstructing the DID document's state by processing authorized messages in consensus order. The process **must** follow these steps:
 
-1. If the most recent valid message has `operation` set to `delete`, the DID document returned MUST be empty.
-2. If the most recent valid message has `operation` set to `create`, and event object is `DIDDocument`, the DID document returned is the document resolve from the IPFS CID reference.
-3. Otherwise
-   1. Read valid message until one has `operation` set to `create`, and event object is `DIDOwner`.
-   2. Construct DID document by applying message `update` and `revoke` operations in order.
-   3. Return constructed DID document.
+1.  **Fetch History:** Retrieve all messages from the specified HCS `topicID` via a Hedera mirror node.
+2.  **Order Messages:** Sort the retrieved messages strictly according to their consensus timestamp and sequence number (lower sequence number first for messages within the same second).
+3.  **Process Sequentially:** Iterate through the ordered messages, maintaining the current known state of the DID document (initially null) and the current authorized controller(s) (initially null). For each message:
+    a.  **Check Version:** Verify if the message payload is a JSON object with a `version` field equal to `"2.0"`. If not, or if the message is malformed, ignore this message and proceed to the next. *[Note: Resolvers supporting multiple versions would apply version-specific logic here.]*
+    b.  **Validate Proof:**
+    i.  If the `operation` is `create`, the `proof` **must** be validated against a verification method associated with the `controller` specified *within the `didDocument` payload of this create message itself*.
+    ii. If the `operation` is `update` or `deactivate`, the `proof` **must** be validated against a verification method associated with the *current known controller(s)* established by prior valid messages in the sequence (i.e., the controller(s) authorized *before* this operation takes effect).
+    iii. If the `proof` field is missing, malformed, invalid according to its cryptosuite, or if it fails to demonstrate that an authorized controller is invoking the necessary capability (e.g., the `proof.verificationMethod` is not associated with the authorized controller(s) for `capabilityInvocation` at this point in the history), the message **must** be considered invalid and ignored.
+    c.  **Apply Operation (if proof is valid):**
+    i.  **`create`:** If the current state is null (i.e., this is the first valid message encountered), parse the `didDocument` from the payload. This becomes the initial valid state of the DID Document. Record the `controller`(s) defined within this document. If a state already exists (meaning a prior valid `create` was processed), this subsequent `create` message **should** be ignored or treated as an error according to resolver policy.
+    ii. **`update`:** Replace the entire current known state of the DID document with the `didDocument` provided in the message payload. Update the record of the current `controller`(s) based on the `controller` property in this new document state.
+    iii. **`deactivate`:** Mark the DID as deactivated. Store any relevant metadata from the message (like the proof details or timestamp) associated with the deactivation event. Once deactivated, subsequent `update` operations for this DID **must** be ignored.
+4.  **Return Result:** After processing all messages:
+    a.  If the DID was marked as deactivated by the latest valid operation, the resolver **must** return a DID resolution result indicating the deactivated status, potentially including metadata about the deactivation event. The resolved DID document representation **should** be null or empty.
+    b.  Otherwise, return the final reconstructed state of the DID document according to the requested representation (e.g., `application/did+ld+json`).
+    c.  If no valid `create` message was found for the specified DID, the DID cannot be resolved, and the resolver **must** return an error (e.g., `notFound`).
 
-### 3.1.3. Update
+### 3.1.3 Update
 
-A property or a DID document is updated by sending a `ConsensusSubmitMessage` transaction to a Hedera network node. It is executed by sending a `submitMessage` RPC call to HCS with the `ConsensusSubmitMessageTransactionBody` containing:
+An existing DID document is updated under the v2.0 ruleset by submitting a `ConsensusSubmitMessage` transaction containing the complete new state of the document and an authorization proof from the current controller. This is executed by sending a `submitMessage` RPC call (or equivalent SDK function) to the HCS API with the `ConsensusSubmitMessageTransactionBody` containing:
 
-- `topicID` - equal to the `did-topic-id` element of the DID namestring.
-- `message` - a JSON DID message envelope described above
-  - `operation` set to `update`
-  - `event` payload either a `Service`, `VerificationMethod` or `VerificationRelationship` object
+  - `topicID`: The HCS Topic ID specified in the `did-topic-id` parameter of the DID being updated.
+  - `message`: The HCS message payload, which **must** be a valid JSON object as described in the introduction to Section 3, specifically structured for an `update` operation:
+      * The `version` field **must** be `"2.0"`.
+      * The `operation` field **must** be `"update"`.
+      * A `didDocument` field **must** be present, containing the **complete desired state** of the DID Document *after* the update. Modifications, additions, or removals of properties (like `verificationMethod`, `service`, or changing the `controller`) **must** be achieved by providing the full document reflecting this new state. Partial updates are not supported at the message level; the entire document state **must** be provided.
+      * A `proof` field **must** be present. This proof **must** be valid and demonstrate the **current `controller`(s)** (i.e., the controller(s) authorized *before* this update is applied) invoking their capability to authorize the update. This is typically indicated by a `proofPurpose` of `"capabilityInvocation"` and generated using a verification method associated with that controller for this purpose.
 
-### 3.1.4. Revoke
+### 3.1.4 Deactivate
 
-A property or a DID document is updated by sending a `ConsensusSubmitMessage` transaction to a Hedera network node. It is executed by sending a `submitMessage` RPC call to HCS with the `ConsensusSubmitMessageTransactionBody` containing:
+A DID document is deactivated under the v2.0 ruleset (marking it as no longer valid or resolvable to a current state) by submitting a `ConsensusSubmitMessage` transaction authorized by the current controller. This is executed by sending a `submitMessage` RPC call (or equivalent SDK function) to the HCS API with the `ConsensusSubmitMessageTransactionBody` containing:
 
-- `topicID` - equal to the `did-topic-id` element of the DID namestring.
-- `message` - a JSON DID message envelope described above
-  - `operation` set to `revoke`
-  - `event` payload either a `Service`, `VerificationMethod` or `VerificationRelationship` object with `id` set to the property to remove.
+  - `topicID`: The HCS Topic ID specified in the `did-topic-id` parameter of the DID being deactivated.
+  - `message`: The HCS message payload, which **must** be a valid JSON object as described in the introduction to Section 3, specifically structured for a `deactivate` operation:
+      * The `version` field **must** be `"2.0"`.
+      * The `operation` field **must** be `"deactivate"`.
+      * A `proof` field **must** be present. This proof **must** be valid and demonstrate the **current `controller`(s)** invoking their capability to authorize the deactivation. This is typically indicated by a `proofPurpose` of `"capabilityInvocation"` and generated using a verification method associated with that controller for this purpose.
+      * Any additional payload fields beyond `version`, `operation`, and `proof` **may** be ignored by resolvers processing the deactivation.
 
-### 3.1.5. Delete
+# 4\. Security Considerations
 
-A Whole DID document is deleted/nullified by sending `ConsensusSubmitMessage` transaction to a Hedera network node. It is executed by sending a `submitMessage` RPC call to HCS with the `ConsensusSubmitMessageTransactionBody` containing:
+The security model for Hedera DID Method v2.0 relies on the inherent security properties of the Hedera network (specifically HCS consensus and finality) combined with the robustness of the W3C controller model and cryptographic proofs. Key considerations include:
 
-- `topicID` - equal to the `did-topic-id` element of the DID namestring.
-- `message` - a JSON DID message envelope described above
-  - `operation` set to `revoke`
-  - `event` payload will be ignored
+  * **Identifier Component Roles (v2.0 Rule):**
 
-## 3.2. Event Payload
+      * *Crucial Distinction:* The `<base58btc-key>` component within the DID identifier string (`did:hedera:<network>:<base58btc-key>_<topic-id>`) serves **only as part of the unique identifier** after the initial `create` operation under v2.0 rules. It **must not** be interpreted as granting ongoing control authority or authorization privileges for managing the DID document. Control is solely determined by the `controller` property within the DID document state and verified via the `proof` mechanism in HCS messages. Misunderstanding this distinction presents a significant security risk, potentially leading to incorrect implementation of authorization logic.
 
-A Base64-encoded JSON object that conforms the different properties of a DID documents to the [DID Specification](https://w3c.github.io/did-core/), the accepted events are listed within this section.
+  * **Controller Authority & Compromise:**
 
-### 3.2.1. DID Document
+      * *Primary Trust Anchor:* The security of a v2.0 Hedera DID rests fundamentally on the security of the DID(s) designated in its `controller` property and their associated cryptographic keys used for `capabilityInvocation`. Control authority is explicitly defined and delegated by this property.
+      * *Controller Compromise Impact:* The most significant threat is the compromise of a designated `controller`'s private keys that are authorized for DID management (e.g., linked via `capabilityInvocation`). An attacker gaining control of such a key gains full authority to modify the DID document (including changing the `controller` to themselves or another entity) or deactivate the Hedera DID.
+      * *Key Management:* Robust key management practices (secure generation, storage, backup, rotation, and revocation procedures) for all keys associated with `controller` DIDs are essential for maintaining the security of the Hedera DIDs they control.
 
-A Hedera DID MAY be created by creating a reference to a DID document available in [IPFS](https://ipfs.io/).
+  * **HCS Topic Interaction & Access Control:**
 
-`DIDDocument` event value must have a JSON structure defined by a [DIDDocument-schema](DIDDocument.schema.json) and contains the following properties:
+      * *`submitKey` Role (Network Permission):* The HCS topic `submitKey` (an optional Hedera feature) controls the **network-level permission** to submit messages (valid or invalid according to DID rules) to the DID's associated topic. Compromising the `submitKey` allows an attacker to submit arbitrary messages to the topic. While this does not grant them logical control over the DID state (which requires a controller's proof), it could potentially disrupt the DID by submitting spam or malformed messages (Denial-of-Service risk, increased resolution cost for clients filtering invalid messages).
+      * *`controller` Proof Role (Logical Authorization):* The HCS `submitKey` **does not** grant the ability to submit *validly authorized* state changes (i.e., messages with valid proofs from the controller). Logical authorization to modify the DID state requires a valid cryptographic `proof` generated by the DID's `controller`.
+      * *Distinct Controls:* Implementers and users **must** understand the clear separation between HCS topic write access (controlled by `submitKey`, if set) and DID logical control (controlled by `controller` proofs).
+      * *SubmitKey Mitigation Strategies:* To mitigate DoS risks associated with open topics or compromised `submitKey`s, operators **should** consider:
+          - Setting an appropriate `submitKey` on the HCS topic and managing it securely.
+          - Rotating the HCS topic `submitKey` periodically, if feasible within their operational model.
+          - Implementing monitoring on HCS topics (e.g., via mirror nodes) to detect unusual activity or spam volume.
+          - Designing resolvers to be resilient to invalid messages (efficiently filtering them out based on proof validation).
 
-- `DIDDocument` - The DIDOwner event with the following attributes:
-  - `id` - The DID id
-  - `type` - The document type, MAY include the DID document serialisation representation.
-  - `cid` - The Content Identifiers to point to DID document in IPFS.
-  - `url` - A URL to the IPFS document MAY be included for convenience.
+  * **Validation Responsibility (Resolvers & Clients):**
 
-```json
-{
-  "DIDDocument": {
-    "id": "did:hedera:testnet:z6MknSnvSESWvijDEysG1wHGnaiZSLSkQEXMECWvXWnd1uaJ_0.0.1723780",
-    "type": "DIDDocument",
-    "cid": "bafybeifn6wwfs355md56nhwaklgr2uvuoknnjobh2d2suzsdv6zpoxajfa/did-document.json",
-    "url": "https://ipfs.io/ipfs/bafybeifn6wwfs355md56nhwaklgr2uvuoknnjobh2d2suzsdv6zpoxajfa/did-document.json"
-  }
-}
-```
+      * As stated previously, neither Hedera network nodes nor standard mirror nodes validate DID document semantics or controller proofs against the DID logic. This validation **must** be performed by DID resolvers and client applications according to the v2.0 specification rules outlined in Section 3. Failure to perform these validations correctly breaks the security model.
+      * *Resolver Validation Requirements (Checklist):* Resolvers **must**:
+          * Strictly follow the HCS consensus timestamp and sequence number ordering for messages.
+          * Reject any v2.0 message that lacks a `proof` field.
+          * Reject any v2.0 message containing a `proof` that is invalid (e.g., signature mismatch, incorrect format), unverifiable (e.g., key cannot be resolved), or does not demonstrate authorized capability invocation by the controller *at that point in the DID's history*.
+          * When processing an update that changes the `controller` property, validate the operation's `proof` against the verification methods authorized by the *previous* (currently valid) controller.
+          * Reject messages with incorrect `version` fields (unless supporting multiple versions) or malformed structures that prevent validation.
 
-### 3.2.2. DID Owner
+# 5\. Privacy Considerations
 
-Each identifier always has a controller address. By default, it is the same as the identifier address, however the resolver must validate this against the DID document. This controller address must be represented in the DID document as a verificationMethod entry with the id set as the DID being resolved and with the fragment `#did-root-key` appended to it. A reference to it must also be added to the authentication and assertionMethod arrays of the DID document.
+DID Documents **should not** include Personally Identifiable Information (PII) directly. Information included in a DID document is typically public.
 
-If the controller for a particular DID is changed, a `DIDOwner` event is emitted through an DID update message. The event data MUST be used to update the `#did-root-key` entry in the verificationMethod array.
+The use of identifiers, particularly public and persistent identifiers like DIDs, can create risks of correlation. When the same DID is used across multiple contexts or interactions, it allows observing parties (including websites, applications, and resolvers) to link those activities together. This correlation can potentially reveal sensitive information about the DID subject's behavior or relationships without their consent.
 
-`DIDOwner` event must have a JSON structure defined by a [DIDOwner-schema](DIDOwner.schema.json) and contains the following properties:
+The DID resolution process itself can leak information. When a party (the verifier) resolves a DID presented by the DID subject, the resolver learns that the subject is interacting with that specific verifier at that time.
 
-- `DIDOwner` - The DIDOwner event with the following attributes:
-  - `id` - The Id property of the verification method.
-  - `type` - reference to the verification method type.
-  - `controller` - The DID of the entity that is authorized to make the change.
-  - `publickeyMultibase` - Mutlibase encoded public key.
+To mitigate correlation risks, DID controllers **should** consider using pairwise DIDs – creating a unique DID for each distinct relationship or interaction. Correspondingly, the DID Documents for these pairwise DIDs **should** contain unique public keys and service endpoints specific to that relationship, further compartmentalizing interactions.
 
-```json
-{
-  "DIDOwner": {
-    "id": "did:hedera:mainnet:7Prd74ry1Uct87nZqL3ny7aR7Cg46JamVbJgk8azVgUm_0.0.12345",
-    "type": "Ed25519VerificationKey2018", 
-    "controller": "did:hedera:mainnet:a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-    "publicKeyMultibase": "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV",
-  }
-}
-```
+# 6\. Reference Implementations and Testing
 
-### 3.2.3. Verification Method
+A reference implementation for the Hedera DID Method v2.0, demonstrating how to create, resolve, update, and deactivate DIDs according to this specification using JavaScript, is being developed. The work-in-progress SDK is available at: [Swiss-Digital-Assets-Institute/hashgraph-did-sdk-js](https://github.com/Swiss-Digital-Assets-Institute/hashgraph-did-sdk-js).
 
-A DID document can express verification methods, such as cryptographic public keys, which can be used to authenticate or authorize interactions with the DID subject or associated parties.
+To ensure interoperability and compliance with this specification, implementers (of SDKs, resolvers, or applications interacting with `did:hedera`) **should** validate their implementations against standardized test vectors. These test vectors **should** cover various scenarios, including:
 
-VerificationMethod event must have a JSON structure defined by a [VerificationMethod-schema](VerificationMethod.schema.json) and contains the following properties:
+  * Valid `create`, `update`, and `deactivate` operations with different cryptosuites.
+  * Handling of multiple messages within the same consensus second (sequence number ordering).
+  * Validation of proofs against the correct historical controller.
+  * Rejection of invalid messages (missing fields, bad proofs, unauthorized keys, incorrect version).
+  * Resolution of deactivated DIDs.
+  * Handling of controller changes.
+    *[Note: A dedicated repository or section within the specification project should be established to host these test vectors.]*
 
-- `VerificationMethod` - The VerificationMethod event with the following attributes:
-  - `id` - The Id property of the verification method.
-  - `type` - reference to the verification method type.
-  - `controller` - The DID of the entity that is authorized to make the change.
-  - `publickeyMultibase` - Mutlibase encoded public key.
+# 7\. References
 
-```json
-{
-  "VerificationMethod": {
-    "id":"did:hedera:mainnet:7Prd74ry1Uct87nZqL3ny7aR7Cg46JamVbJgk8azVgUm_0.0.12345#delegate-key1",
-    "type": "Ed25519VerificationKey2018", 
-    "controller": "did:hedera:mainnet:7Prd74ry1Uct87nZqL3ny7aR7Cg46JamVbJgk8azVgUm_0.0.12345",
-    "publicKeyMultibase": "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV",
-  },
-}
-```
-
-### 3.2.4. Verification Relationship
-
-A verification relationship expresses the relationship between the DID subject and a verification method.
-
-Different verification relationships enable the associated verification methods to be used for different purposes. Several useful verification relationship include:
-
-- `authentication` verification relationship is used to specify how the DID subject is expected to be authenticated, for purposes such as logging into a website or engaging in any sort of challenge-response protocol. 
-- `assertionMethod` verification relationship allows verifier to check if a verifiable credential contains a proof created by the DID subject.
-- `keyAgreement` verification relationship allows the DID subject to specify how an entity can generate encryption material in order to transmit confidential information, such as for the purposes of establishing a secure communication channel with the recipient.
-- `capabilityInvocation` verification relationship allows the DID subject to invoke a cryptographic capability for a specific authorisation.
-- `capabilityDelegation` verification relationship is used to specify a mechanism that might be used by the DID subject to delegate a cryptographic capability to another party, such as delegating the authority to access a specific HTTP API to a subordinate.
-
-`VerificationRelationship` event must have a JSON structure defined by a [VerificationRelationship-schema](VerificationRelationship.schema.json) and contains the following properties:
-
-- `VerificationRelationship` - The VerificationRelationship event with the following attributes:
-  - `id` - The Id property of the verification method.
-  - `relationshipType` - Relationship type that is linked to specific verification method. to be performed on the DID document.  Valid values are: `authentication` , `assertionMethod` , `keyAgreement` , `capabilityInvocation` and `capabilityDelegation`.
-  - `type` - reference to the verification method type.
-  - `controller` - The DID of the entity that is authorized to make the change.
-  - `publickeyMultibase` - Multibase encoded public key.
-
-```json
-{
-  "VerificationRelationship": {
-    "id":"did:hedera:mainnet:7Prd74ry1Uct87nZqL3ny7aR7Cg46JamVbJgk8azVgUm_0.0.12345#delegate-key1",
-    "relationshipType": "authentication",
-    "type": "Ed25519VerificationKey2018", 
-    "controller": "did:hedera:mainnet:7Prd74ry1Uct87nZqL3ny7aR7Cg46JamVbJgk8azVgUm_0.0.12345",
-    "publicKeyMultibase": "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV",
-  },
-}
-```
-
-### 3.2.5. Services
-
-Services are used in DID documents to express ways of communicating with the DID subject or associated entities. A service can be any type of service the DID subject wants to advertise, including decentralized identity management services for further discovery, authentication, authorization, or interaction.
-
-Service event must have a JSON structure defined by a [service-schema](Service.schema.json) and contains the following properties:
-
-- `Service` - The Service event with the following attributes:
-  - `id` - The Id property of the service.
-  - `type` - reference to the service type.
-  - `serviceEndpoint` - valid urn to the service endpoint.
-
-```json
-{
-  "Service":
-    {
-      "id": "did:hedera:mainnet:7Prd74ry1Uct87nZqL3ny7aR7Cg46JamVbJgk8azVgUm_0.0.12345#vcs",
-      "type": "VerifiableCredentialService",
-      "serviceEndpoint": "https://example.com/vc/"
-    },
-}
-```
-
-# 4. Security Considerations
-
-Security of Hedera DID Documents inherits the security properties of Hedera Hashgraph network itself.
-
-Hedera Hashgraph uses the hashgraph algorithm for the consensus timestamping and ordering of transactions. Hashgraph is Asynchronous Byzantine Fault Tolerant (ABFT) and fair, in that no particular node has the sole authority to decide the order of transactions, even if only for a short period of time.
-
-Hedera uses a proof of stake (POS) model to mitigate Sybil attacks. The influence of a particular node towards consensus is weighted by the amount of HBARs, the network's native coin, they control.
-
-Hedera charges fees for the processing of transactions into consensus and to partially mitigate Denial of Service attacks.
-
-In the HCS model, messages are submitted to the Hedera network nodes, which collectively assign them a consensus timestamp and order within a topic, and then are deleted from those network consensus nodes. Consensus network nodes do not persist HCS messages beyond 3 minutes.
-
-The messages are persisted only on mirror nodes, and appnet members that are subscribed to the corresponding topic.
-
-A public DID Document is sent unencrypted. Public DIDs/DID Documents include public keys and service endpoints.
-
-Write access to Hedera Consensus Service DID Topics can be controlled by stipulating a list of public keys for the topic by the DID Controller. Only HCS messages signed by the corresponding private keys will be accepted. A key can be a "threshold key", which means a list of M keys, any N of which must sign in order for the threshold signature to be considered valid. The keys within a threshold signature may themselves be threshold signatures, to allow complex signature requirements.
-
-# 5. Privacy Considerations
-
-A DID Document should not include Personally Identifiable Information (PII).
-
-The identifiers used to identify a subject create a greater risk of correlation when those identifiers are long-lived or used across more than one application domain as those domains could use that shared handle for the subject to share information about that subject without their express consent.
-
-The resolution process may leak PII as the resolver can infer that the Subject presenting the DID is interacting with the verifier resolving the DID.
-
-If DID Controllers want to mitigate the risk of correlation, they should use unique DIDs for every interaction and the corresponding DID Documents should contain a unique public key.
-
-# 6. Reference Implementations
-
-The code at [hashgraph/did-sdk-js](https://github.com/hashgraph/did-sdk-js) is intended to provide a JavaScript SDK for this DID method specification. A set of unit tests and example script commands within this repository present a reference implementation of this DID method.
-
-# 7. References
-
-- [DID Primer](https://github.com/WebOfTrustInfo/rwot5-boston/blob/master/topics-and-advance-readings/did-primer.md)
-- [DID Spec](https://w3c.github.io/did-core/)
-- <https://github.com/hashgraph/did-sdk-js>
-- [Hedera docs](https://docs.hedera.com)
-- [Hedera website](https://www.hedera.com)
+  * [Decentralized Identifiers (DIDs) v1.0 - W3C Recommendation](https://www.w3.org/TR/did-core/) [DID-CORE]
+  * [Verifiable Credential Data Integrity v1.0 - W3C Recommendation](https://www.w3.org/TR/vc-data-integrity/) [VC-DI-1.0]
+  * [DID Resolution v1.0 - W3C Community Group Draft Report](https://www.google.com/search?q=https://w3c-ccg.github.io/did-resolution/) [DID-RESOLUTION]
+  * [Key words for use in RFCs to Indicate Requirement Levels - RFC 2119](https://www.rfc-editor.org/rfc/rfc2119.html) [RFC2119]
+  * [Hedera DID Method v1.0 Specification (For historical context)](https://github.com/hashgraph/did-method/blob/v1.0/hedera-did-method-specification.md)
+  * [Hedera Documentation](https://docs.hedera.com)
+  * [Hedera Website](https://www.hedera.com)
