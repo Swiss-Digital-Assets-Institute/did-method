@@ -27,7 +27,7 @@ sudo apt install pandoc librsvg2-bin texlive-latex-extra
 
 ## SDKs supporting the Hedera Hashgraph DID Method
 
-- JavaScript SDK is maintained in a separate repository at [did-sdk-js](https://github.com/hashgraph/did-sdk-js).
+- JavaScript SDK is maintained in a separate repository at [hashgraph-did-sdk-js](https://github.com/Swiss-Digital-Assets-Institute/hashgraph-did-sdk-js).
 
 ## License Information
 
