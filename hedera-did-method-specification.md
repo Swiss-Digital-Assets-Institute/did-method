@@ -147,8 +147,11 @@ A Hedera TopicID is a triplet of numbers (shard.realm.num), e.g., `0.0.29656231`
 Create, Update, and Deactivate operations against a DID Document under the v2.0 ruleset are performed by submitting authorized messages to the DID's associated Hedera Consensus Service (HCS) topic. Authorization **must** be achieved via cryptographic proofs linked to the DID's designated controller(s), as detailed below.
 
 ![alt text](./images/crud.flow.drawio.svg "Create, Update and Deactivate flow")
+
 The Read operation (resolution) of a DID document **must** occur by querying a Hedera mirror node for the HCS topic history and reconstructing the state based on the ordered, authorized messages.
+
 ![alt text](./images/read.flow.drawio.svg "Read flow") 
+
 A valid v2.0 HCS message payload for Create, Update, or Deactivate operations **must** be a JSON object containing at least the following top-level fields:
 
   - `version`: **must** be the string `"2.0"` to identify the ruleset version being used.
