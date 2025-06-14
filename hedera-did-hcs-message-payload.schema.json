@@ -10,6 +10,12 @@
       "type": "string",
       "pattern": "^\\d+\\.\\d+$"
     },
+    "did": {
+      "description": "The full DID to which the operation applies.",
+      "type": "string",
+      "format": "uri",
+      "pattern": "^did:hedera:(mainnet|testnet):z[1-9A-HJ-NP-Za-km-z]{40,}_\\d+\\.\\d+\\.\\d+$"
+    },
     "operation": {
       "description": "The DID operation being performed.",
       "type": "string",
@@ -30,29 +36,49 @@
   },
   "required": [
     "version",
+    "did",
     "operation",
     "proof"
   ],
   "allOf": [
     {
       "if": {
-        "properties": { "operation": { "const": "create" } },
-        "required": ["operation"]
+        "properties": { "operation": { "const": "create" } }
       },
       "then": { "required": ["didDocument"] }
     },
     {
       "if": {
-        "properties": { "operation": { "const": "update" } },
-         "required": ["operation"]
+        "properties": { "operation": { "const": "update" } }
       },
       "then": { "required": ["didDocument"] }
+    },
+    {
+      "if": {
+        "required": ["didDocument"]
+      },
+      "then": {
+        "properties": {
+          "didDocument": {
+            "properties": {
+              "id": {
+                "description": "The id within the didDocument must match the top-level did property.",
+                "const": { "$ref": "/properties/did" }
+              }
+            }
+          }
+        }
+      }
     }
   ],
   "$defs": {
     "didDocument": {
       "description": "Placeholder for the DID Document structure. Should reference a dedicated schema.",
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uri" }
+      },
+      "required": ["id"]
     },
     "dataIntegrityProof": {
       "description": "Represents a W3C Data Integrity proof structure.",
