@@ -1,0 +1,88 @@
+{
+  "specs": [
+    {
+      "title": "Hedera DID Method",
+      "spec_directory": "./hedera-did-method",
+      "markdown_paths": [
+        "header.md",
+        "abstract.md",
+        "definitions.md",
+        "specification.md",
+        "security.md",
+        "privacy.md",
+        "implementations.md",
+        "references.md",
+        "version.md"
+      ],
+      "source": {
+        "host": "github",
+        "account": "Swiss-Digital-Assets-Institute",
+        "repo": "did-method"
+      },
+      "output_path": "./hedera-did-method",
+      "logo": "https://raw.githubusercontent.com/Swiss-Digital-Assets-Institute/did-method/refs/heads/master/images/hedera-logo.png",
+      "logo_link": "https://github.com/Swiss-Digital-Assets-Institute/did-method/tree/master/specifications/hedera-did-method",
+      "katex": false,
+      "external_specs": [
+        {
+          "DID-CORE": {
+            "href": "https://www.w3.org/TR/did-core/",
+            "title": "Decentralized Identifiers (DIDs) v1.0",
+            "rawDate": "2022-07-19",
+            "authors": [
+              "Manu Sporny",
+              "Amy Guy",
+              "Markus Sabadello",
+              "Drummond Reed"
+            ],
+            "status": "W3C Recommendation"
+          }
+        },
+        {
+          "VC-DATA-INTEGRITY": {
+            "href": "https://www.w3.org/TR/vc-data-integrity/",
+            "title": "Verifiable Credential Data Integrity v1.0",
+            "rawDate": "2023-03-16",
+            "authors": [
+              "David Longley",
+              "Manu Sporny"
+            ],
+            "status": "W3C Recommendation"
+          }
+        },
+        {
+          "DID-RESOLUTION": {
+            "href": "https://www.w3.org/TR/did-resolution/",
+            "title": "DID Resolution v1.0",
+            "rawDate": "2022-12-15",
+            "authors": [
+              "Dmitri Zagidulin",
+              "Markus Sabadello"
+            ],
+            "status": "W3C Working Draft"
+          }
+        },
+        {
+          "RFC2119": {
+            "href": "https://www.rfc-editor.org/rfc/rfc2119.html",
+            "title": "Key words for use in RFCs to Indicate Requirement Levels",
+            "rawDate": "1997-03",
+            "authors": [
+              "S. Bradner"
+            ],
+            "status": "RFC 2119"
+          }
+        },
+        {
+          "HEDERA-DID-V1": {
+            "href": "https://github.com/hashgraph/did-method",
+            "title": "Hedera DID Method v1.0 Specification",
+            "rawDate": "2024-05-22",
+            "authors": [],
+            "status": "Historical"
+          }
+        }
+      ]
+    }
+  ]
+}

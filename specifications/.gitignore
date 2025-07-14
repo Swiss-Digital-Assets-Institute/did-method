@@ -1,0 +1,19 @@
+# Node modules
+node_modules/
+
+# Generated output
+hedera-did-method/index.html
+hedera-did-method/*.html
+
+# Package lock
+package-lock.json
+
+# macOS
+.DS_Store
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

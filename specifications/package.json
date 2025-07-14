@@ -1,0 +1,26 @@
+{
+  "name": "hedera-did-method-specification",
+  "version": "2.0.0",
+  "description": "Hedera DID Method Specification",
+  "scripts": {
+    "edit": "node -e \"require('spec-up')()\"",
+    "render": "node -e \"require('spec-up')({ nowatch: true })\"",
+    "dev": "node -e \"require('spec-up')({ dev: true })\""
+  },
+  "keywords": [
+    "Hedera",
+    "Hashgraph",
+    "DID",
+    "decentralized identifiers",
+    "verifiable credentials",
+    "HCS"
+  ],
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Swiss-Digital-Assets-Institute/did-method/issues"
+  },
+  "homepage": "https://github.com/Swiss-Digital-Assets-Institute/did-method",
+  "devDependencies": {
+    "spec-up": "github:brianorwhatever/spec-up#master"
+  }
+}
