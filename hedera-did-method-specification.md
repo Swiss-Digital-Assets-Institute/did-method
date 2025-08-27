@@ -174,10 +174,19 @@ did:hedera:testnet:z6MkipomYgdGz1MXBm5ZJNVNVqTgumeMboAy3fCpd_0.0.645701?versionT
 
 ### Topic Association Models
 
-The `did-topic-id` parameter allows for flexibility in how DID operations are logged on HCS, supporting two primary models:
+The `did-topic-id` parameter allows for flexibility in how DID operations are logged on HCS. The choice between these models is left to the implementer or DID controller, and involves trade-offs between cost and performance.
 
-  - **Dedicated Topic Model:** In this model, a single HCS topic is created and used for the messages of a single DID. This provides a clean, segregated history for the DID but may involve higher operational overhead if managing a large number of DIDs.
-  - **Shared Topic Model:** In this model, a single HCS topic can be used to log messages for multiple DIDs. This can be more efficient and cost-effective for organizations managing many related DIDs, as it consolidates HCS interactions. The choice between these models is left to the implementer or DID controller.
+#### Dedicated Topic Model (One Topic per DID)
+
+-   **Cost:** This model requires a distinct `ConsensusCreateTopicTransaction` for each DID, incurring the associated network fee for every DID created. This can become a significant factor for applications needing to provision thousands or millions of DIDs.
+-   **Resolution Performance:** This approach offers optimal resolution performance. When a resolver queries the topic associated with a specific DID, it can be confident that every message on that topic is relevant. This leads to faster lookup times, lower data transfer from mirror nodes, and reduced computational load.
+-   **Isolation:** It provides strong logical isolation. The activity on one DID's topic does not interfere with another's, simplifying monitoring and reducing the "noise" a resolver must process.
+
+#### Shared Topic Model (Many DIDs per Topic)
+
+-   **Cost:** This is the primary benefit. A single HCS topic can be created once, and its ID can be reused in the identifiers of many DIDs. This dramatically reduces on-chain creation costs, making it highly suitable for applications that manage large volumes of DIDs (e.g., for IoT devices or customers).
+-   **Resolution Performance:** The trade-off is a potential decrease in resolution performance. A resolver must fetch all messages from the shared topic and perform a critical first filtering step by inspecting the top-level `did` property on every message, discarding those not relevant to the target DID. This can increase data transfer, memory usage, and CPU load on the resolver, especially for topics with very high message throughput.
+-   **Use Case:** This model is ideal for systems where cost-efficiency for DID provisioning at scale is a higher priority than per-resolution performance, and where a single entity manages the related cohort of DIDs.
 
 # 3\. CRUD Operations
 
