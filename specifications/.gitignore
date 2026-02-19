@@ -4,6 +4,7 @@ node_modules/
 # Generated output
 hedera-did-method/index.html
 hedera-did-method/*.html
+!hedera-did-method/logo-replacement.html
 
 # macOS
 .DS_Store

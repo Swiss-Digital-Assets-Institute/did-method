@@ -4,7 +4,7 @@
   "description": "Hedera DID Method Specification",
   "scripts": {
     "edit": "node -e \"require('spec-up')()\"",
-    "render": "node -e \"require('spec-up')({ nowatch: true })\"",
+    "render": "node -e \"require('spec-up')({ nowatch: true })\" && node scripts/replace-logo.js",
     "dev": "node -e \"require('spec-up')({ dev: true })\""
   },
   "keywords": [
