@@ -20,7 +20,6 @@ The most current version of the specification is available as:
 
 -   ➡️ **[Hedera DID Method Specification v2.0](hedera-did-method-specification.md)** (Markdown)
 -   ➡️ **[Hedera DID Method Specification v2.0 — ReSpec](https://swiss-digital-assets-institute.github.io/did-method/hedera-did-method/)** (Spec-Up / ReSpec, browser-rendered)  
-    Link: <https://swiss-digital-assets-institute.github.io/did-method/hedera-did-method/>
 
 <details>
   <summary>Historical Versions</summary>
