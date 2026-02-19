@@ -5,9 +5,6 @@ node_modules/
 hedera-did-method/index.html
 hedera-did-method/*.html
 
-# Package lock
-package-lock.json
-
 # macOS
 .DS_Store
 
